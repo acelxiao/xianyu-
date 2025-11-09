@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爬取诊断</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .diagnostic-section { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        .btn { background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 5px; cursor: pointer; border: none; }
+        .btn-success { background-color: #28a745; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-danger { background-color: #dc3545; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <h1>🔍 爬取功能诊断</h1>
+
+    <div class="diagnostic-section">
+        <h3>📊 系统状态检查</h3>
+        <button onclick="checkSystemStatus()" class="btn btn-success">检查系统状态</button>
+        <div id="systemStatus"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>🍪 Cookie配置检查</h3>
+        <button onclick="checkCookieConfig()" class="btn">检查Cookie配置</button>
+        <div id="cookieConfig"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>📦 数据库商品检查</h3>
+        <button onclick="checkDatabaseProducts()" class="btn">检查数据库商品</button>
+        <div id="databaseProducts"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>🧪 爬取功能测试</h3>
+        <form id="scrapeTestForm">
+            <div class="form-group">
+                <label for="testKeyword">测试关键词：</label>
+                <input type="text" id="testKeyword" value="花盆" placeholder="输入测试关键词">
+            </div>
+            <div class="form-group">
+                <label for="testPages">测试页数：</label>
+                <select id="testPages">
+                    <option value="1">1页</option>
+                    <option value="2">2页</option>
+                    <option value="3" selected>3页</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="testDelay">延迟时间（秒）：</label>
+                <select id="testDelay">
+                    <option value="1">1秒</option>
+                    <option value="2" selected>2秒</option>
+                    <option value="3">3秒</option>
+                    <option value="5">5秒</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-warning">开始测试爬取</button>
+        </form>
+        <div id="scrapeTestResult"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>🔧 问题诊断指南</h3>
+        <div class="info">
+            <h4>常见爬取问题：</h4>
+            <ul>
+                <li><strong>Cookie无效</strong> - 需要更新闲鱼Cookie</li>
+                <li><strong>网络问题</strong> - 检查网络连接和防火墙</li>
+                <li><strong>浏览器问题</strong> - Playwright浏览器启动失败</li>
+                <li><strong>关键词问题</strong> - 关键词太具体可能导致无结果</li>
+                <li><strong>反爬机制</strong> - 闲鱼可能检测到爬虫行为</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="/" class="btn">返回首页</a>
+        <a href="/scrape" class="btn">爬取页面</a>
+        <a href="/system-settings" class="btn">系统设置</a>
+    </div>
+
+    <script>
+        // 检查系统状态
+        async function checkSystemStatus() {
+            const resultDiv = document.getElementById('systemStatus');
+            resultDiv.innerHTML = '<p>正在检查系统状态...</p>';
+
+            try {
+                const response = await fetch('/api/system-info');
+                const data = await response.json();
+
+                let html = '<h4>系统状态：</h4>';
+                if (data.error) {
+                    html += `<div class="status error">❌ 系统状态检查失败: ${data.error}</div>`;
+                } else {
+                    html += '<div class="status success">✅ 系统运行正常</div>';
+                    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+            }
+        }
+
+        // 检查Cookie配置
+        async function checkCookieConfig() {
+            const resultDiv = document.getElementById('cookieConfig');
+            resultDiv.innerHTML = '<p>正在检查Cookie配置...</p>';
+
+            try {
+                const response = await fetch('/api/system-info');
+                const data = await response.json();
+
+                // 这里应该有一个专门的API来检查Cookie
+                // 暂时显示通用信息
+                resultDiv.innerHTML = `
+                    <div class="status info">📋 请在系统设置页面检查Cookie配置</div>
+                    <p><strong>检查要点：</strong></p>
+                    <ul>
+                        <li>Cookie是否已配置</li>
+                        <li>Cookie是否有效（未过期）</li>
+                        <li>Cookie格式是否正确</li>
+                    </ul>
+                    <p><a href="/system-settings" target="_blank">前往系统设置页面</a></p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+            }
+        }
+
+        // 检查数据库商品
+        async function checkDatabaseProducts() {
+            const resultDiv = document.getElementById('databaseProducts');
+            resultDiv.innerHTML = '<p>正在检查数据库商品...</p>';
+
+            try {
+                const response = await fetch('/api/products?page=1&limit=10');
+                const data = await response.json();
+
+                if (data.products && data.products.length > 0) {
+                    let html = `<h4>数据库中有 ${data.total} 个商品：</h4>`;
+                    html += '<div style="max-height: 300px; overflow-y: auto;">';
+
+                    data.products.forEach(product => {
+                        html += `
+                            <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px;">
+                                <h5>${product.title}</h5>
+                                <p><strong>价格:</strong> ${product.price}</p>
+                                <p><strong>地区:</strong> ${product.location}</p>
+                                <p><strong>关键词:</strong> ${product.keyword}</p>
+                                <p><strong>搜索时间:</strong> ${product.search_time}</p>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = '<div class="status warning">⚠️ 数据库中没有商品数据</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+            }
+        }
+
+        // 测试爬取功能
+        async function testScrape(keyword, maxPages, delay) {
+            const resultDiv = document.getElementById('scrapeTestResult');
+            resultDiv.innerHTML = '<p>正在测试爬取功能...</p>';
+
+            try {
+                const formData = new FormData();
+                formData.append('keyword', keyword);
+                formData.append('max_pages', maxPages);
+                formData.append('delay', delay);
+
+                const response = await fetch('/scrape', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ ${result.message}</div>
+                        <p>爬取成功！请检查商品列表页面查看结果。</p>
+                        <p><a href="/" target="_blank">查看商品列表</a></p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ 爬取失败: ${result.message}</div>`;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 测试失败: ${error.message}</div>`;
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById('scrapeTestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const keyword = document.getElementById('testKeyword').value;
+            const maxPages = document.getElementById('testPages').value;
+            const delay = document.getElementById('testDelay').value;
+
+            if (!keyword.trim()) {
+                alert('请输入测试关键词');
+                return;
+            }
+
+            testScrape(keyword, maxPages, delay);
+        });
+
+        // 页面加载时自动检查系统状态
+        window.addEventListener('load', function() {
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html>

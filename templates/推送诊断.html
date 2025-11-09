@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推送诊断</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .diagnostic-section { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        .btn { background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 5px; cursor: pointer; border: none; }
+        .btn-success { background-color: #28a745; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-danger { background-color: #dc3545; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .config-item { margin: 10px 0; padding: 10px; background-color: white; border-radius: 5px; }
+        .product-item { margin: 10px 0; padding: 10px; background-color: white; border-radius: 5px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>🔍 推送功能诊断</h1>
+
+    <div class="diagnostic-section">
+        <h3>📊 系统状态检查</h3>
+        <button onclick="diagnoseSystem()" class="btn btn-success">开始诊断</button>
+        <div id="systemDiagnosis"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>📢 通知配置检查</h3>
+        <button onclick="checkNotificationConfigs()" class="btn">检查通知配置</button>
+        <div id="notificationConfigs"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>📦 最新商品检查</h3>
+        <button onclick="checkLatestProducts()" class="btn">检查最新商品</button>
+        <div id="latestProducts"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>🧪 手动推送测试</h3>
+        <button onclick="testManualPush()" class="btn btn-warning">测试手动推送</button>
+        <div id="manualTestResult"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h3>🔧 问题诊断指南</h3>
+        <div class="info">
+            <h4>常见问题：</h4>
+            <ul>
+                <li><strong>没有通知配置</strong> - 需要先创建并启用通知配置</li>
+                <li><strong>未启用最新商品推送</strong> - 在通知配置中需要启用"最新发布商品"选项</li>
+                <li><strong>Webhook地址无效</strong> - 检查企业微信/钉钉的webhook地址是否正确</li>
+                <li><strong>没有新商品</strong> - 系统只推送新爬取的商品，已有商品不会重复推送</li>
+                <li><strong>网络问题</strong> - 检查网络连接和防火墙设置</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="/" class="btn">返回首页</a>
+        <a href="/system-settings" class="btn">系统设置</a>
+        <a href="/test_notifications.html" class="btn">测试通知</a>
+    </div>
+
+    <script>
+        // 系统诊断
+        async function diagnoseSystem() {
+            const resultDiv = document.getElementById('systemDiagnosis');
+            resultDiv.innerHTML = '<p>正在诊断系统...</p>';
+
+            try {
+                const response = await fetch('/api/quick-push-status');
+                const data = await response.json();
+
+                let html = '<h4>快速推送状态：</h4>';
+                if (data.enabled) {
+                    html += '<div class="status success">✅ 快速推送已启用</div>';
+                } else {
+                    html += '<div class="status warning">⚠️ 快速推送未启用（这是正常的，您使用的是通知配置中的推送功能）</div>';
+                }
+
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 诊断失败: ${error.message}</div>`;
+            }
+        }
+
+        // 检查通知配置
+        async function checkNotificationConfigs() {
+            const resultDiv = document.getElementById('notificationConfigs');
+            resultDiv.innerHTML = '<p>正在检查通知配置...</p>';
+
+            try {
+                const response = await fetch('/api/notification-configs');
+                const configs = await response.json();
+
+                if (configs.length === 0) {
+                    resultDiv.innerHTML = '<div class="status error">❌ 没有找到通知配置，请先添加通知配置</div>';
+                    return;
+                }
+
+                let html = `<h4>找到 ${configs.length} 个通知配置：</h4>`;
+
+                configs.forEach(config => {
+                    const events = JSON.parse(config.events || '{}');
+                    const hasLatestProduct = events.latest_product === true;
+                    const isEnabled = config.enabled === true;
+
+                    html += `
+                        <div class="config-item">
+                            <h5>${config.config_name}</h5>
+                            <p><strong>状态:</strong> ${isEnabled ? '✅ 已启用' : '❌ 已禁用'}</p>
+                            <p><strong>类型:</strong> ${config.webhook_type}</p>
+                            <p><strong>最新商品推送:</strong> ${hasLatestProduct ? '✅ 已启用' : '❌ 未启用'}</p>
+                            <p><strong>Webhook:</strong> ${config.webhook_url ? '✅ 已配置' : '❌ 未配置'}</p>
+                            <p><strong>描述:</strong> ${config.description || '无'}</p>
+                        </div>
+                    `;
+
+                    if (!isEnabled) {
+                        html += '<div class="status warning">⚠️ 此配置已禁用，需要启用才能推送</div>';
+                    }
+                    if (!hasLatestProduct) {
+                        html += '<div class="status warning">⚠️ 此配置未启用最新商品推送</div>';
+                    }
+                    if (!config.webhook_url) {
+                        html += '<div class="status error">❌ 此配置缺少webhook地址</div>';
+                    }
+                });
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+            }
+        }
+
+        // 检查最新商品
+        async function checkLatestProducts() {
+            const resultDiv = document.getElementById('latestProducts');
+            resultDiv.innerHTML = '<p>正在检查最新商品...</p>';
+
+            try {
+                // 这里需要添加获取最新商品的API
+                // 暂时显示模拟结果
+                resultDiv.innerHTML = `
+                    <div class="status info">📋 请通过首页查看商品列表</div>
+                    <p><strong>检查要点：</strong></p>
+                    <ul>
+                        <li>是否有新爬取的商品</li>
+                        <li>商品的搜索时间是否是最近的</li>
+                        <li>商品数据是否完整（标题、价格、链接等）</li>
+                    </ul>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+            }
+        }
+
+        // 手动推送测试
+        async function testManualPush() {
+            const resultDiv = document.getElementById('manualTestResult');
+            resultDiv.innerHTML = '<p>正在测试推送...</p>';
+
+            try {
+                // 先获取通知配置
+                const configsResponse = await fetch('/api/notification-configs');
+                const configs = await configsResponse.json();
+
+                if (configs.length === 0) {
+                    resultDiv.innerHTML = '<div class="status error">❌ 没有找到通知配置</div>';
+                    return;
+                }
+
+                // 找到启用了最新商品推送的配置
+                const validConfigs = configs.filter(config => {
+                    const events = JSON.parse(config.events || '{}');
+                    return config.enabled && events.latest_product && config.webhook_url;
+                });
+
+                if (validConfigs.length === 0) {
+                    resultDiv.innerHTML = '<div class="status error">❌ 没有找到有效的通知配置（已启用 + 最新商品推送 + webhook地址）</div>';
+                    return;
+                }
+
+                // 使用第一个有效配置进行测试
+                const testResponse = await fetch('/api/test-latest-products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ config_id: validConfigs[0].id })
+                });
+
+                const result = await testResponse.json();
+
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="status success">✅ ${result.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ ${result.message}</div>`;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 测试失败: ${error.message}</div>`;
+            }
+        }
+
+        // 页面加载时自动运行诊断
+        window.addEventListener('load', function() {
+            diagnoseSystem();
+        });
+    </script>
+</body>
+</html>

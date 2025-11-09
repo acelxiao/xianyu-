@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.title[:30] }} - 商品详情{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box"></i> 商品详情
+                    </h5>
+                    <span class="badge bg-light text-dark">ID: {{ product.id }}</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- 基本信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">商品标题</h6>
+                        <p class="fs-5">{{ product.title or '未知标题' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">价格</h6>
+                        <p class="fs-4 text-danger fw-bold">{{ product.price or '价格未知' }}</p>
+                    </div>
+                </div>
+
+                <!-- 详细信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">地区</h6>
+                        <p>
+                            {% if product.location %}
+                            <span class="badge location-badge fs-6">
+                                <i class="bi bi-geo-alt"></i> {{ product.location }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">未知地区</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">卖家信用</h6>
+                        <p>
+                            {% if product.seller_credit %}
+                            <span class="badge credit-badge fs-6">
+                                <i class="bi bi-star"></i> {{ product.seller_credit }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">未知</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 技术信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">商品ID</h6>
+                        <p><code>{{ product.product_id or '未知ID' }}</code></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">搜索关键词</h6>
+                        <p><span class="badge bg-secondary">{{ product.keyword or '未知' }}</span></p>
+                    </div>
+                </div>
+
+                <!-- 时间信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">搜索时间</h6>
+                        <p>
+                            {% if product.search_time %}
+                            <i class="bi bi-clock"></i>
+                            {{ product.search_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% else %}
+                            <span class="text-muted">未知时间</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">数据来源</h6>
+                        <p><span class="badge bg-info">{{ product.data_source }}</span></p>
+                    </div>
+                </div>
+
+                <!-- 商品链接 -->
+                {% if product.product_link %}
+                <div class="mb-4">
+                    <h6 class="text-muted">原商品链接</h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="{{ product.product_link }}" readonly>
+                        <button class="btn btn-outline-primary" type="button" onclick="window.open('{{ product.product_link }}', '_blank')">
+                            <i class="bi bi-box-arrow-up-right"></i> 访问原链接
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 创建时间 -->
+                <div class="mb-3">
+                    <h6 class="text-muted">记录创建时间</h6>
+                    <p class="text-muted">
+                        <i class="bi bi-calendar-plus"></i>
+                        {{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> 返回列表
+                    </a>
+                    {% if product.product_link %}
+                    <a href="{{ product.product_link }}" target="_blank" class="btn btn-success">
+                        <i class="bi bi-box-arrow-up-right"></i> 查看原商品
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-danger" onclick="deleteProduct({{ product.id }})">
+                        <i class="bi bi-trash"></i> 删除记录
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- 相关商品 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-collection"></i> 相同关键词商品
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="relatedProducts">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightning"></i> 快速操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('scrape') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i> 爬取更多数据
+                    </a>
+                    <a href="{{ url_for('index', keyword=product.keyword) }}" class="btn btn-outline-info">
+                        <i class="bi bi-search"></i> 查看相同关键词商品
+                    </a>
+                    <a href="{{ url_for('stats') }}" class="btn btn-outline-success">
+                        <i class="bi bi-bar-chart"></i> 查看数据统计
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="copyProductInfo()">
+                        <i class="bi bi-clipboard"></i> 复制商品信息
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统信息 -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> 系统信息
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted">
+                    <div class="mb-2">
+                        <strong>数据来源:</strong> {{ product.data_source }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>记录ID:</strong> {{ product.id }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>创建时间:</strong><br>
+                        {{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这个商品记录吗？</p>
+                <p class="text-muted">此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let deleteModal;
+    let deleteProductId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        loadRelatedProducts();
+    });
+
+    // 删除商品
+    function deleteProduct(id) {
+        deleteProductId = id;
+        deleteModal.show();
+    }
+
+    // 确认删除
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+        if (!deleteProductId) return;
+
+        try {
+            const response = await fetch(`/delete/${deleteProductId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 关闭模态框
+                deleteModal.hide();
+
+                // 显示成功消息
+                alert('商品删除成功！');
+
+                // 跳转到商品列表
+                window.location.href = '/';
+            } else {
+                alert('删除失败: ' + data.message);
+            }
+        } catch (error) {
+            alert('删除失败: ' + error.message);
+        }
+    });
+
+    // 加载相关商品
+    async function loadRelatedProducts() {
+        try {
+            const response = await fetch('/api/products?keyword={{ product.keyword }}&page=1');
+            const data = await response.json();
+
+            const relatedProductsDiv = document.getElementById('relatedProducts');
+            if (data.products && data.products.length > 0) {
+                // 过滤掉当前商品，只显示其他商品
+                const otherProducts = data.products.filter(p => p.id !== {{ product.id }}).slice(0, 5);
+
+                if (otherProducts.length > 0) {
+                    const productsHtml = otherProducts.map(product => `
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">${product.title.substring(0, 25)}...</div>
+                                <div class="small text-muted">
+                                    ${product.price} · ${product.location || '未知地区'}
+                                </div>
+                            </div>
+                            <a href="/product/${product.id}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    `).join('');
+                    relatedProductsDiv.innerHTML = productsHtml;
+                } else {
+                    relatedProductsDiv.innerHTML = '<div class="text-center text-muted">暂无其他相关商品</div>';
+                }
+            } else {
+                relatedProductsDiv.innerHTML = '<div class="text-center text-muted">暂无相关商品</div>';
+            }
+        } catch (error) {
+            document.getElementById('relatedProducts').innerHTML =
+                '<div class="text-center text-danger">加载失败</div>';
+        }
+    }
+
+    // 复制商品信息
+    function copyProductInfo() {
+        const productInfo = `
+商品标题: {{ product.title }}
+价格: {{ product.price }}
+地区: {{ product.location or '未知' }}
+卖家信用: {{ product.seller_credit or '未知' }}
+商品ID: {{ product.product_id }}
+搜索关键词: {{ product.keyword }}
+搜索时间: {{ product.search_time.strftime('%Y-%m-%d %H:%M:%S') if product.search_time else '未知' }}
+原链接: {{ product.product_link or '无' }}
+        `.trim();
+
+        navigator.clipboard.writeText(productInfo).then(() => {
+            alert('商品信息已复制到剪贴板！');
+        }).catch(() => {
+            // 备用方案
+            const textArea = document.createElement('textarea');
+            textArea.value = productInfo;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('商品信息已复制到剪贴板！');
+        });
+    }
+</script>
+{% endblock %}

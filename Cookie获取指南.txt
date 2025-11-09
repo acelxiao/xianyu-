@@ -1,0 +1,26 @@
+闲鱼Cookie获取指南
+
+方法1：使用Chrome浏览器获取Cookie
+1. 打开Chrome浏览器
+2. 访问 https://www.goofish.com
+3. 登录你的闲鱼账号
+4. 按F12打开开发者工具
+5. 点击 Network 标签页
+6. 刷新页面（F5）
+7. 在左侧点击任意请求
+8. 在右侧找到 Request Headers
+9. 找到 Cookie 字段
+10. 复制完整的Cookie字符串
+
+方法2：使用Cookie管理器
+1. 安装Chrome扩展 "Cookie Editor"
+2. 访问并登录闲鱼网站
+3. 点击扩展图标，导出Cookie
+
+Cookie格式示例：
+sessionid=xxxx; _tb_token_=xxxx; cna=xxxx; cookie2=xxxx
+
+重要提醒：
+- Cookie包含敏感信息，请妥善保管
+- Cookie会过期，定期需要重新获取
+- 不要与他人分享你的Cookie

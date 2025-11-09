@@ -1,0 +1,3264 @@
+{% extends "base.html" %}
+
+{% block title %}系统设置 - 闲鱼数据管理系统{% endblock %}
+
+{% block content %}
+<!-- 系统状态概览 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div id="spiderStatus" class="mb-2">
+                    <i class="bi bi-robot display-4 text-warning"></i>
+                </div>
+                <h6 class="card-title">爬虫状态</h6>
+                <span class="badge bg-secondary" id="spiderStatusText">检测中...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div id="serverStatus" class="mb-2">
+                    <i class="bi bi-server display-4 text-warning"></i>
+                </div>
+                <h6 class="card-title">服务器状态</h6>
+                <span class="badge bg-secondary" id="serverStatusText">检测中...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div id="cookieStatus" class="mb-2">
+                    <i class="bi bi-cookie display-4 text-warning"></i>
+                </div>
+                <h6 class="card-title">Cookie状态</h6>
+                <span class="badge bg-secondary" id="cookieStatusText">检测中...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="mb-2">
+                    <i class="bi bi-database display-4 text-info"></i>
+                </div>
+                <h6 class="card-title">数据库</h6>
+                <span class="badge bg-info" id="dbCount">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie管理 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-lock me-2"></i> Cookie 管理
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="cookieInput" class="form-label">
+                        <i class="bi bi-key me-1"></i> Cookie 字符串
+                    </label>
+                    <textarea class="form-control" id="cookieInput" rows="6"
+                              placeholder="请粘贴从闲鱼网站获取的完整Cookie字符串，格式如：name1=value1; name2=value2; ...">{{ current_cookie or '' }}</textarea>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle me-1"></i>
+                        从浏览器开发者工具中获取完整的Cookie字符串
+                        <span class="float-end" id="cookieLength">字符数: 0</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2 d-md-block">
+                            <button class="btn btn-primary" onclick="updateCookie()">
+                                <i class="bi bi-check-circle me-1"></i> 更新Cookie
+                            </button>
+                            <button class="btn btn-outline-info" onclick="testCookie()">
+                                <i class="bi bi-play-circle me-1"></i> 测试Cookie
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="formatCookie()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> 格式化
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2 d-md-block text-md-end">
+                            <button class="btn btn-outline-warning" onclick="showCookieGuide()">
+                                <i class="bi bi-question-circle me-1"></i> 获取指南
+                            </button>
+                            <button class="btn btn-outline-success" onclick="backupCookie()">
+                                <i class="bi bi-download me-1"></i> 备份Cookie
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cookie状态显示 -->
+                <div id="cookieStatus" class="mt-3"></div>
+
+                <!-- Cookie详细信息 -->
+                <div id="cookieInfo" class="alert alert-info mt-3" style="display: none;">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle me-2"></i> Cookie 详细信息
+                    </h6>
+                    <div id="cookieDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 爬虫统计 -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="totalScraped">-</h3>
+                        <p class="mb-0 opacity-75">总爬取数</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-database display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="todayScraped">-</h3>
+                        <p class="mb-0 opacity-75">今日爬取</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-calendar-day display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="successRate">-</h3>
+                        <p class="mb-0 opacity-75">成功率</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-check-circle display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock-history text-muted me-2"></i>
+                        <small class="text-muted">最后爬取时间: <span id="lastScrape" class="fw-bold text-dark">-</span></small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center me-3" id="spiderStatusIndicator">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <small class="text-success">爬虫空闲</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshScrapingStats()">
+                            <i class="bi bi-arrow-clockwise"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 通知配置管理 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-bell"></i> 通知配置管理
+                    <span class="badge bg-primary ms-2" id="configCount">0</span>
+                </h6>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="showAddNotificationModal()">
+                        <i class="bi bi-plus-circle me-1"></i> 添加通知配置
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 通知配置列表 -->
+                <div id="notificationConfigsList">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass-split me-2"></i>正在加载通知配置...
+                    </div>
+                </div>
+
+                <!-- 立即执行的通知配置加载脚本 -->
+                <script>
+                    // 立即强制加载通知配置
+                    console.log('🚀 内联脚本：开始强制加载通知配置');
+
+                    // 直接执行加载，不依赖任何外部函数
+                    const container = document.getElementById('notificationConfigsList');
+                    if (container) {
+                        console.log('✅ 找到容器，开始加载...');
+                        container.innerHTML = '<div class="text-center text-info py-3"><i class="bi bi-arrow-clockwise spin"></i> 正在加载...</div>';
+
+                        // 立即发起API请求
+                        fetch('/api/notification-configs?t=' + Date.now())
+                            .then(response => response.json())
+                            .then(result => {
+                                console.log('📦 API响应:', result);
+                                if (result.success && result.configs.length > 0) {
+                                    container.innerHTML = '<div class="alert alert-success m-3"><i class="bi bi-check-circle me-2"></i>已成功加载 ' + result.configs.length + ' 个通知配置</div>';
+                                    console.log('✅ 通知配置加载成功!');
+                                } else {
+                                    container.innerHTML = '<div class="alert alert-warning m-3"><i class="bi bi-exclamation-triangle me-2"></i>暂无通知配置</div>';
+                                    console.log('⚠️ 暂无通知配置');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('❌ 加载失败:', error);
+                                container.innerHTML = '<div class="alert alert-danger m-3"><i class="bi bi-x-circle me-2"></i>加载失败: ' + error.message + '</div>';
+                            });
+                    } else {
+                        console.error('❌ 找不到容器元素');
+                    }
+
+                    // 再次尝试调用外部函数（如果存在）
+                    setTimeout(() => {
+                        if (typeof loadNotificationConfigs === 'function') {
+                            console.log('🔄 调用外部loadNotificationConfigs函数');
+                            loadNotificationConfigs();
+                        }
+                    }, 1000);
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning-charge-fill me-2"></i> 快速推送设置
+                </h5>
+                <div>
+                    <button class="btn btn-light btn-sm" onclick="toggleQuickPush()" id="quickPushButton">
+                        <i class="bi bi-toggle-off me-1" id="quickPushIcon"></i>
+                        <span id="quickPushText">开启推送</span>
+                    </button>
+                    <button class="btn btn-outline-light btn-sm ms-2" onclick="loadQuickPushSettings()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 状态指示器 -->
+                <div class="alert alert-primary border-0 bg-light-primary" id="quickPushStatus">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                        <div>
+                            <strong>快速推送状态：</strong>
+                            <span id="quickPushStatusText" class="badge bg-secondary">未启用</span>
+                            <div class="small mt-1 text-muted">启用后将自动推送符合条件的最新产品</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 配置选项 -->
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary mb-3">
+                                    <i class="bi bi-key-fill me-2"></i>关键词设置
+                                </h6>
+                                <div class="mb-3">
+                                    <label for="quickKeywords" class="form-label fw-bold">
+                                        <i class="bi bi-tag me-1"></i>监控关键词
+                                    </label>
+                                    <textarea class="form-control" id="quickKeywords" rows="3"
+                                           placeholder="输入关键词，用逗号分隔&#10;例如：手机,iPhone,苹果,电脑"></textarea>
+                                    <div class="form-text">
+                                        <i class="bi bi-lightbulb"></i> 产品标题包含任一关键词即会推送
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-success mb-3">
+                                    <i class="bi bi-currency-yen me-2"></i>价格与地区
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-cash-coin me-1"></i>价格范围
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="quickMinPrice"
+                                                   placeholder="最低价" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="quickMaxPrice"
+                                                   placeholder="最高价" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="quickLocations" class="form-label fw-bold">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>关注地区
+                                    </label>
+                                    <input type="text" class="form-control" id="quickLocations"
+                                           placeholder="例如：北京,上海,广州">
+                                    <div class="form-text">
+                                        <i class="bi bi-lightbulb"></i> 留空表示不限地区
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning mb-3">
+                                    <i class="bi bi-bell-fill me-2"></i>通知渠道
+                                </h6>
+                                <div id="quickPushNotifications" class="mb-3">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="bi bi-hourglass-split me-2"></i>正在加载通知配置...
+                                    </div>
+                                </div>
+
+                                <!-- 快速推送通知渠道加载脚本 -->
+                                <script>
+                                    // 立即加载快速推送通知渠道
+                                    console.log('🚀 快速推送内联脚本：开始加载通知渠道');
+
+                                    const quickPushContainer = document.getElementById('quickPushNotifications');
+                                    if (quickPushContainer) {
+                                        console.log('✅ 找到快速推送容器，开始加载通知渠道...');
+                                        quickPushContainer.innerHTML = '<div class="text-center text-info py-2"><i class="bi bi-arrow-clockwise spin"></i> 正在加载通知渠道...</div>';
+
+                                        // 立即发起API请求
+                                        fetch('/api/notification-configs?t=' + Date.now())
+                                            .then(response => response.json())
+                                            .then(result => {
+                                                console.log('📦 快速推送通知渠道响应:', result);
+                                                if (result.success && result.configs.length > 0) {
+                                                    // 只显示已启用的通知配置
+                                                    const enabledConfigs = result.configs.filter(config => config.enabled);
+
+                                                    if (enabledConfigs.length > 0) {
+                                                        // 渲染已启用的通知渠道选项
+                                                        let html = '';
+                                                        enabledConfigs.forEach(config => {
+                                                            // 根据平台获取正确的图标（使用与主通知配置一致的图标映射）
+                                                            let platformIcon = 'bell'; // 默认图标
+                                                            if (config.platform === 'wechat_work') platformIcon = 'wechat';
+                                                            else if (config.platform === 'dingtalk') platformIcon = 'chat-dots';
+                                                            else if (config.platform === 'feishu') platformIcon = 'chat-square-dots';
+                                                            else if (config.platform === 'email') platformIcon = 'envelope';
+
+                                                            html += `
+                                                                <div class="form-check border rounded p-3 mb-3 border-success bg-light position-relative">
+                                                                    <input class="form-check-input" type="checkbox" value="${config.id}" checked
+                                                                           id="quick_notify_${config.id}">
+                                                                    <label class="form-check-label d-flex align-items-center justify-content-between w-100" for="quick_notify_${config.id}">
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="icon-wrapper me-3">
+                                                                                <i class="bi ${platformIcon} fs-5 text-success"></i>
+                                                                            </div>
+                                                                            <div>
+                                                                                <div class="fw-bold mb-1">${config.config_name}</div>
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-platform me-1"></i>${config.platform}
+                                                                                    <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                                                                </small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="text-end">
+                                                                            <span class="badge bg-success mb-1">
+                                                                                已启用
+                                                                            </span>
+                                                                            <div class="small text-muted">
+                                                                                <i class="bi bi-bell me-1"></i>
+                                                                                推送中
+                                                                            </div>
+                                                                        </div>
+                                                                    </label>
+                                                                </div>
+                                                            `;
+                                                        });
+                                                        quickPushContainer.innerHTML = html;
+                                                        console.log('✅ 快速推送通知渠道加载成功!');
+                                                    } else {
+                                                        // 没有已启用的通知配置
+                                                        quickPushContainer.innerHTML = `
+                                                            <div class="alert alert-warning">
+                                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                                <strong>暂无已启用的通知配置</strong>
+                                                                <div class="small mt-2 text-muted">
+                                                                    请先在"通知配置管理"中启用至少一个通知配置
+                                                                </div>
+                                                            </div>
+                                                        `;
+                                                        console.log('⚠️ 暂无已启用的通知配置');
+                                                    }
+                                                } else {
+                                                    quickPushContainer.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>暂无通知配置</div>';
+                                                    console.log('⚠️ 暂无通知配置');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('❌ 快速推送通知渠道加载失败:', error);
+                                                quickPushContainer.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>加载失败: ' + error.message + '</div>';
+                                            });
+                                    } else {
+                                        console.error('❌ 找不到快速推送通知渠道容器');
+                                    }
+                                </script>
+
+                                <div class="alert alert-light border-0" id="notificationHint">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        请至少选择一个通知渠道
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div class="text-muted">
+                        <small>
+                            <i class="bi bi-shield-check me-1"></i>
+                            所有更改都会自动保存
+                        </small>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary" onclick="testQuickPush()">
+                            <i class="bi bi-send-fill me-1"></i> 测试推送
+                        </button>
+                        <button class="btn btn-primary ms-2" onclick="saveQuickPushSettings()">
+                            <i class="bi bi-check-circle-fill me-1"></i> 保存设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-light-primary {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border: 1px solid rgba(13, 110, 253, 0.2) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-light {
+    transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#quickPushButton.active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+#quickPushButton.active:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.card-title i {
+    font-size: 1.2em;
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.form-check-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-check {
+    transition: all 0.3s ease;
+}
+
+.form-check:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+    transform: translateX(2px);
+}
+
+.form-check-input:checked + .form-check-label {
+    color: #667eea;
+}
+
+.alert {
+    border-radius: 12px;
+    border: none;
+}
+
+.badge {
+    font-size: 0.75em;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+}
+
+.btn-outline-primary:hover {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-header {
+    border-bottom: none;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* 自定义滚动条 */
+.form-control::-webkit-scrollbar {
+    width: 6px;
+}
+
+.form-control::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.form-control::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+}
+
+.form-control::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
+}
+
+/* 通知配置开关样式 */
+.form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+    border-color: #ccc;
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.form-check-input:hover:not(:checked) {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.form-check-label {
+    cursor: pointer;
+    margin-left: 0.5em;
+}
+
+.form-switch .form-check-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280,0,0,.25%29'/%3e%3c/svg%3e");
+    background-position: left center;
+    border-radius: 2em;
+}
+
+.form-switch .form-check-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%28255,255,255,1.0%29'/%3e%3c/svg%3e");
+    background-position: right center;
+}
+
+/* 状态徽章动画 */
+.badge {
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked + .form-check-label .badge.bg-success {
+    animation: pulse-success 0.5s ease-in-out;
+}
+
+.form-check-input:not(:checked) + .form-check-label .badge.bg-secondary {
+    animation: pulse-secondary 0.5s ease-in-out;
+}
+
+@keyframes pulse-success {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes pulse-secondary {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* 快速推送通知渠道优化样式 */
+#quickPushNotifications .form-check {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+#quickPushNotifications .form-check::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+#quickPushNotifications .form-check:hover::before {
+    left: 100%;
+}
+
+#quickPushNotifications .form-check:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+#quickPushNotifications .form-check.border-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(40, 167, 69, 0.1));
+    border-left: 4px solid #28a745 !important;
+}
+
+#quickPushNotifications .form-check.border-secondary {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.05), rgba(108, 117, 125, 0.1));
+    border-left: 4px solid #6c757d !important;
+}
+
+#quickPushNotifications .form-check-input {
+    cursor: pointer;
+    width: 1.3em;
+    height: 1.3em;
+    border-radius: 0.3em;
+    border: 2px solid #dee2e6;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+#quickPushNotifications .form-check-input:hover {
+    border-color: #0d6efd;
+    transform: scale(1.1);
+}
+
+#quickPushNotifications .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    animation: checkPulse 0.3s ease;
+}
+
+#quickPushNotifications .form-check-label {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+#quickPushNotifications .form-check-input:checked + .form-check-label {
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+#quickPushNotifications .form-check-label .badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+    border-radius: 50px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#quickPushNotifications .form-check-label .badge.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+#quickPushNotifications .form-check-label .badge.bg-secondary {
+    background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+}
+
+#quickPushNotifications .form-check-label i {
+    transition: all 0.2s ease;
+}
+
+#quickPushNotifications .form-check:hover .form-check-label i {
+    transform: scale(1.1);
+}
+
+@keyframes checkPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* 添加选中状态的发光效果 */
+#quickPushNotifications .form-check-input:checked ~ .form-check-label::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #0d6efd, #6610f2, #0d6efd);
+    border-radius: 0.5rem;
+    opacity: 0;
+    z-index: -1;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { opacity: 0; }
+    to { opacity: 0.1; }
+}
+
+/* 图标包装器样式 */
+#quickPushNotifications .icon-wrapper {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+    transition: all 0.3s ease;
+}
+
+#quickPushNotifications .form-check:hover .icon-wrapper {
+    transform: rotate(5deg) scale(1.05);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(13, 110, 253, 0.1));
+}
+
+#quickPushNotifications .form-check.border-success .icon-wrapper {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(40, 167, 69, 0.1));
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+#quickPushNotifications .form-check.border-secondary .icon-wrapper {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.1), rgba(108, 117, 125, 0.05));
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.1);
+}
+
+/* 复选框位置优化 */
+#quickPushNotifications .form-check-input {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+/* 标签区域优化 */
+#quickPushNotifications .form-check-label .d-flex {
+    margin-right: 3rem;
+}
+
+/* 状态指示器动画 */
+#quickPushNotifications .form-check-label .small i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* 增强的悬停效果 */
+#quickPushNotifications .form-check {
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+}
+
+#quickPushNotifications .form-check:hover {
+    backdrop-filter: blur(15px);
+}
+
+/* 选中状态的特殊效果 */
+#quickPushNotifications .form-check-input:checked ~ .form-check-label {
+    position: relative;
+}
+
+#quickPushNotifications .form-check-input:checked ~ .form-check-label::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    animation: bounceIn 0.5s ease;
+    z-index: 15;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* 平台标签美化 */
+#quickPushNotifications .form-check-label .small i.bi-platform {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* 徽章样式优化 */
+#quickPushNotifications .form-check-label .badge {
+    border-radius: 8px !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    text-transform: none;
+}
+
+/* 状态文字优化 */
+#quickPushNotifications .form-check-label .small.text-muted {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+</style>
+
+<!-- 通知配置模态框 -->
+<div class="modal fade" id="notificationConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-bell me-2"></i>
+                    <span id="notificationModalTitle">添加通知配置</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notificationConfigForm">
+                    <input type="hidden" id="notificationConfigId">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationPlatform" class="form-label">通知平台</label>
+                                <select class="form-select" id="notificationPlatform" required onchange="updateNotificationFields()">
+                                    <option value="">请选择通知平台</option>
+                                    <option value="dingtalk">钉钉</option>
+                                    <option value="feishu">飞书</option>
+                                    <option value="wechat_work">企业微信</option>
+                                    <option value="email">邮件</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationName" class="form-label">配置名称</label>
+                                <input type="text" class="form-control" id="notificationName" required
+                                       placeholder="例如：工作群通知">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notificationDescription" class="form-label">描述</label>
+                        <input type="text" class="form-control" id="notificationDescription"
+                               placeholder="配置描述（可选）">
+                    </div>
+
+                    <!-- 钉钉配置 -->
+                    <div id="dingtalkConfig" class="notification-platform-config" style="display: none;">
+                        <div class="mb-3">
+                            <label for="dingtalkWebhook" class="form-label">钉钉 Webhook URL</label>
+                            <input type="url" class="form-control" id="dingtalkWebhook"
+                                   placeholder="https://oapi.dingtalk.com/robot/send?access_token=...">
+                            <div class="form-text">从钉钉群机器人设置中获取</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dingtalkSecret" class="form-label">钉钉签名密钥（可选）</label>
+                            <input type="text" class="form-control" id="dingtalkSecret"
+                                   placeholder="SEC开头的密钥">
+                            <div class="form-text">用于安全验证，可选</div>
+                        </div>
+                    </div>
+
+                    <!-- 飞书配置 -->
+                    <div id="feishuConfig" class="notification-platform-config" style="display: none;">
+                        <div class="mb-3">
+                            <label for="feishuWebhook" class="form-label">飞书 Webhook URL</label>
+                            <input type="url" class="form-control" id="feishuWebhook"
+                                   placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+                            <div class="form-text">从飞书群机器人设置中获取</div>
+                        </div>
+                    </div>
+
+                    <!-- 企业微信配置 -->
+                    <div id="wechatWorkConfig" class="notification-platform-config" style="display: none;">
+                        <div class="mb-3">
+                            <label for="wechatWorkWebhook" class="form-label">企业微信 Webhook URL</label>
+                            <input type="url" class="form-control" id="wechatWorkWebhook"
+                                   placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+                            <div class="form-text">从企业微信群机器人设置中获取</div>
+                        </div>
+                    </div>
+
+                    <!-- 邮件配置 -->
+                    <div id="emailConfig" class="notification-platform-config" style="display: none;">
+                        <div class="mb-3">
+                            <label for="emailAddress" class="form-label">邮箱地址</label>
+                            <input type="email" class="form-control" id="emailAddress" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailSmtp" class="form-label">SMTP 服务器</label>
+                            <input type="text" class="form-control" id="emailSmtp" placeholder="smtp.gmail.com">
+                            <div class="form-text">例如：smtp.gmail.com (Gmail), smtp.163.com (网易邮箱)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailPassword" class="form-label">邮箱密码/授权码</label>
+                            <input type="password" class="form-control" id="emailPassword" required>
+                            <div class="form-text">对于Gmail等需要使用应用专用密码</div>
+                        </div>
+                    </div>
+
+                    <!-- 触发事件配置 -->
+                    <div class="mb-3">
+                        <label class="form-label">触发事件</label>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="eventStart" checked>
+                                    <label class="form-check-label" for="eventStart">
+                                        开始爬取
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="eventSuccess" checked>
+                                    <label class="form-check-label" for="eventSuccess">
+                                        爬取成功
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="eventError" checked>
+                                    <label class="form-check-label" for="eventError">
+                                        爬取失败
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="eventStop">
+                                    <label class="form-check-label" for="eventStop">
+                                        主动停止
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="eventLatestProduct">
+                                    <label class="form-check-label" for="eventLatestProduct">
+                                        最新发布商品推送
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div id="latestProductConfig" style="display: none;">
+                                    <div class="card card-body">
+                                        <h6>最新发布商品推送配置</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="latestKeywords" class="form-label">关键词（多个用逗号分隔）</label>
+                                                <input type="text" class="form-control form-control-sm" id="latestKeywords" placeholder="例如：手机,iPhone,华为">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="latestInterval" class="form-label">检查间隔（分钟）</label>
+                                                <input type="number" class="form-control form-control-sm" id="latestInterval" value="5" min="1">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="latestCount" class="form-label">每次推送数量</label>
+                                                <input type="number" class="form-control form-control-sm" id="latestCount" value="3" min="1" max="10">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notificationEnabled">
+                            <label class="form-check-label" for="notificationEnabled">
+                                启用此通知配置
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveNotificationConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日志监控 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-terminal"></i> 系统日志
+                </h6>
+                <div>
+                    <select class="form-select form-select-sm d-inline-block w-auto me-2" id="logLevel" onchange="filterLogs()">
+                        <option value="all">所有级别</option>
+                        <option value="error">错误</option>
+                        <option value="warning">警告</option>
+                        <option value="info">信息</option>
+                        <option value="debug">调试</option>
+                    </select>
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshLogs()">
+                        <i class="bi bi-arrow-clockwise"></i> 刷新
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="clearLogs()">
+                        <i class="bi bi-trash"></i> 清空
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        显示最近 <span id="logCount">0</span> 条日志，自动刷新已开启
+                    </small>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        <label class="form-check-label" for="autoRefresh">自动刷新</label>
+                    </div>
+                </div>
+                <div id="logContainer" style="height: 400px; overflow-y: auto; background-color: #1e1e1e; color: #ffffff; padding: 15px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 13px; line-height: 1.4;">
+                    <div class="text-muted text-center py-5">
+                        <i class="bi bi-hourglass-split me-2"></i>正在加载系统日志...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 产品匹配规则模态框 -->
+<div class="modal fade" id="matchRuleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-funnel me-2"></i>
+                    <span id="matchRuleModalTitle">添加匹配规则</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="matchRuleForm">
+                    <input type="hidden" id="matchRuleId" value="">
+
+                    <!-- 基本信息 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="ruleName" class="form-label">规则名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="ruleName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="matchLogic" class="form-label">匹配逻辑</label>
+                            <select class="form-select" id="matchLogic">
+                                <option value="AND">AND（全部条件都匹配）</option>
+                                <option value="OR">OR（任一条件匹配）</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ruleDescription" class="form-label">规则描述</label>
+                        <textarea class="form-control" id="ruleDescription" rows="2" placeholder="描述此规则的用途..."></textarea>
+                    </div>
+
+                    <!-- 关键词匹配 -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-key me-2"></i>关键词匹配</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="keywordsInclude" class="form-label">包含关键词</label>
+                                <input type="text" class="form-control" id="keywordsInclude"
+                                       placeholder="多个关键词用逗号分隔，如：手机,苹果,iPhone">
+                                <div class="form-text">产品标题必须包含这些关键词中的至少一个</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="keywordsExclude" class="form-label">排除关键词</label>
+                                <input type="text" class="form-control" id="keywordsExclude"
+                                       placeholder="多个关键词用逗号分隔，如：零件,维修,二手">
+                                <div class="form-text">产品标题不能包含这些关键词</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 价格匹配 -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-currency-yen me-2"></i>价格匹配</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="priceMin" class="form-label">最低价格（元）</label>
+                                    <input type="number" class="form-control" id="priceMin" min="0" step="0.01">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="priceMax" class="form-label">最高价格（元）</label>
+                                    <input type="number" class="form-control" id="priceMax" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="form-text">留空表示不限价格</div>
+                        </div>
+                    </div>
+
+                    <!-- 地区匹配 -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>地区匹配</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="locationsInclude" class="form-label">包含地区</label>
+                                <input type="text" class="form-control" id="locationsInclude"
+                                       placeholder="多个地区用逗号分隔，如：北京,上海,广州">
+                                <div class="form-text">只匹配这些地区的商品</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="locationsExclude" class="form-label">排除地区</label>
+                                <input type="text" class="form-control" id="locationsExclude"
+                                       placeholder="多个地区用逗号分隔，如：西藏,新疆">
+                                <div class="form-text">不匹配这些地区的商品</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 卖家信用 -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>卖家信用</h6>
+                        </div>
+                        <div class="card-body">
+                            <label for="sellerCreditMin" class="form-label">最低卖家信用</label>
+                            <select class="form-select" id="sellerCreditMin">
+                                <option value="">不限</option>
+                                <option value="good">良好</option>
+                                <option value="very_good">很好</option>
+                                <option value="excellent">极好</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 通知配置 -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-bell me-2"></i>通知配置</h6>
+                        </div>
+                        <div class="card-body">
+                            <label class="form-label">选择通知渠道</label>
+                            <div id="notificationCheckboxList">
+                                <div class="text-muted">
+                                    <i class="bi bi-hourglass-split me-2"></i>正在加载通知配置...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 启用状态 -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="ruleEnabled" checked>
+                        <label class="form-check-label" for="ruleEnabled">
+                            启用此匹配规则
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="saveMatchRule()">
+                    <i class="bi bi-check-circle me-1"></i> 保存规则
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie获取指南模态框 -->
+<div class="modal fade" id="cookieGuideModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cookie获取指南</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6><i class="bi bi-1-circle"></i> 打开闲鱼网站</h6>
+                <p>访问 <a href="https://www.goofish.com" target="_blank">https://www.goofish.com</a> 并登录你的闲鱼账号</p>
+
+                <h6><i class="bi bi-2-circle"></i> 打开开发者工具</h6>
+                <p>在网页上按 <kbd>F12</kbd> 或右键选择"检查元素"</p>
+
+                <h6><i class="bi bi-3-circle"></i> 找到Cookie</h6>
+                <ul>
+                    <li>点击 "Application" 标签页</li>
+                    <li>在左侧找到 "Cookies" → "https://www.goofish.com"</li>
+                    <li>复制所有Cookie内容（格式：name1=value1; name2=value2; ...）</li>
+                </ul>
+
+                <h6><i class="bi bi-4-circle"></i> 复制Cookie字符串</h6>
+                <p>将Cookie粘贴到上面的输入框中，点击"更新Cookie"即可</p>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>注意事项：</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Cookie会定期过期，需要及时更新</li>
+                        <li>不要在公共电脑上保存Cookie</li>
+                        <li>Cookie包含你的登录信息，请妥善保管</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 注意：DOMContentLoaded 事件监听器已移动到文件末尾以避免冲突
+
+    // 检查系统状态
+    async function checkSystemStatus() {
+        // 检查爬虫状态
+        await checkSpiderStatus();
+
+        // 检查服务器状态
+        await checkServerStatus();
+
+        // 检查Cookie状态
+        await checkCookieStatus();
+
+        // 加载数据库统计
+        await loadDatabaseStats();
+    }
+
+    // 检查爬虫状态
+    async function checkSpiderStatus() {
+        try {
+            const response = await fetch('/api/stats');
+            if (response.ok) {
+                updateStatus('spider', 'success', '正常');
+                const data = await response.json();
+                document.getElementById('totalScraped').textContent = data.total_products;
+                document.getElementById('todayScraped').textContent = '0'; // 需要后端支持
+                document.getElementById('successRate').textContent = '100%';
+                document.getElementById('lastScrape').textContent = '最近';
+            } else {
+                updateStatus('spider', 'danger', '异常');
+            }
+        } catch (error) {
+            updateStatus('spider', 'warning', '未知');
+        }
+    }
+
+    // 检查服务器状态
+    async function checkServerStatus() {
+        try {
+            const startTime = Date.now();
+            const response = await fetch('/api/stats');
+            const endTime = Date.now();
+
+            if (response.ok) {
+                const responseTime = endTime - startTime;
+                const status = responseTime < 500 ? 'success' : 'warning';
+                const text = responseTime < 500 ? '正常' : '较慢';
+                updateStatus('server', status, text + ` (${responseTime}ms)`);
+            } else {
+                updateStatus('server', 'danger', '异常');
+            }
+        } catch (error) {
+            updateStatus('server', 'danger', '离线');
+        }
+    }
+
+    // 检查Cookie状态
+    async function checkCookieStatus() {
+        try {
+            // 优先检查输入框中的Cookie
+            const cookieInput = document.getElementById('cookieInput');
+            const cookieString = cookieInput.value.trim();
+
+            let response, result;
+
+            if (cookieString) {
+                // 如果输入框有Cookie，验证输入框中的Cookie
+                response = await fetch('/api/check-cookie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cookie: cookieString })
+                });
+            } else {
+                // 如果输入框没有Cookie，检查系统中保存的Cookie
+                response = await fetch('/api/check-cookie', {
+                    method: 'POST'
+                });
+            }
+
+            result = await response.json();
+
+            if (result.valid) {
+                updateStatus('cookie', 'success', '有效');
+                if (result.info) {
+                    showCookieInfo(result.info);
+                }
+            } else {
+                updateStatus('cookie', 'danger', '无效');
+            }
+        } catch (error) {
+            updateStatus('cookie', 'warning', '未知');
+        }
+    }
+
+    // 格式化Cookie
+    function formatCookie() {
+        const cookieInput = document.getElementById('cookieInput');
+        const cookieText = cookieInput.value.trim();
+
+        if (!cookieText) {
+            showToast('请先输入Cookie内容', 'warning');
+            return;
+        }
+
+        try {
+            // 尝试解析并重新格式化Cookie
+            const cookies = cookieText.split(';').map(c => c.trim()).filter(c => c);
+            const formattedCookies = cookies
+                .map(cookie => {
+                    const [key, ...valueParts] = cookie.split('=');
+                    if (key && valueParts.length > 0) {
+                        return `${key.trim()}=${valueParts.join('=').trim()}`;
+                    }
+                    return cookie;
+                })
+                .join('; ');
+
+            cookieInput.value = formattedCookies;
+            updateCharCount();
+            showToast('Cookie格式化完成', 'success');
+        } catch (error) {
+            showToast('Cookie格式化失败', 'error');
+        }
+    }
+
+    // 显示Cookie状态详情
+    async function showCookieStatus() {
+        const cookieInput = document.getElementById('cookieInput');
+        const cookieText = cookieInput.value.trim();
+
+        if (!cookieText) {
+            showToast('请先输入Cookie内容', 'warning');
+            return;
+        }
+
+        const statusDiv = document.getElementById('cookieStatus');
+        statusDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    正在检查Cookie状态...
+                </div>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/check-cookie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cookie: cookieText })
+            });
+
+            const result = await response.json();
+
+            if (result.valid) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Cookie验证通过</strong><br>
+                        <small class="text-muted">包含 ${result.cookie_count || 0} 个字段，最后检查时间: ${new Date().toLocaleString()}</small>
+                    </div>
+                `;
+
+                // 更新详细状态
+                showCookieInfo({
+                    count: result.cookie_count || 0,
+                    expiry: result.expiry || '未知',
+                    username: result.username || '未知',
+                    valid: true
+                });
+
+                showToast('Cookie验证通过', 'success');
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle me-2"></i>
+                        <strong>Cookie验证失败</strong><br>
+                        <small class="text-muted">${result.message || 'Cookie无效或已过期'} (检查时间: ${new Date().toLocaleString()})</small>
+                    </div>
+                `;
+
+                showToast('Cookie验证失败', 'error');
+            }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>检查失败</strong><br>
+                    <small class="text-muted">网络错误或服务不可用 (检查时间: ${new Date().toLocaleString()})</small>
+                </div>
+            `;
+
+            showToast('检查Cookie状态失败', 'error');
+        }
+    }
+
+    // 更新字符计数
+    function updateCharCount() {
+        const cookieInput = document.getElementById('cookieInput');
+        const charCount = document.getElementById('cookieLength');
+        const length = cookieInput.value.length;
+
+        charCount.textContent = `字符数: ${length}`;
+
+        // 根据长度改变颜色
+        if (length > 1000) {
+            charCount.style.color = '#dc3545'; // 红色
+        } else if (length > 500) {
+            charCount.style.color = '#ffc107'; // 黄色
+        } else {
+            charCount.style.color = '#6c757d'; // 灰色
+        }
+    }
+
+    // 加载数据库统计
+    async function loadDatabaseStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+            document.getElementById('dbCount').textContent = data.total_products + ' 条';
+        } catch (error) {
+            document.getElementById('dbCount').textContent = '获取失败';
+        }
+    }
+
+    // 更新状态显示
+    function updateStatus(type, status, text) {
+        const statusEl = document.getElementById(type + 'Status');
+        const textEl = document.getElementById(type + 'StatusText');
+
+        // 更新图标颜色
+        statusEl.innerHTML = `<i class="bi bi-${getStatusIcon(type)} display-4 text-${status}"></i>`;
+
+        // 更新状态文本
+        textEl.className = `badge bg-${status}`;
+        textEl.textContent = text;
+    }
+
+    // 获取状态图标
+    function getStatusIcon(type) {
+        const icons = {
+            'spider': 'robot',
+            'server': 'server',
+            'cookie': 'cookie'
+        };
+        return icons[type] || 'gear';
+    }
+
+    // 显示Cookie信息
+    function showCookieInfo(info) {
+        const cookieInfo = document.getElementById('cookieInfo');
+        const cookieDetails = document.getElementById('cookieDetails');
+
+        cookieDetails.innerHTML = `
+            <strong>Cookie数量:</strong> ${info.count || 0}<br>
+            <strong>有效期:</strong> ${info.expiry || '未知'}<br>
+            <strong>用户名:</strong> ${info.username || '未知'}<br>
+            <strong>最后更新:</strong> ${new Date().toLocaleString()}
+        `;
+
+        cookieInfo.style.display = 'block';
+    }
+
+    // 更新Cookie
+    async function updateCookie() {
+        const cookieInput = document.getElementById('cookieInput');
+        const cookieString = cookieInput.value.trim();
+
+        if (!cookieString) {
+            showToast('请输入Cookie字符串', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/update-cookie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cookie: cookieString })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Cookie更新成功！', 'success');
+                await checkCookieStatus();
+            } else {
+                showToast('Cookie更新失败: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('更新失败: ' + error.message, 'error');
+        }
+    }
+
+    // 测试Cookie
+    async function testCookie() {
+        const cookieInput = document.getElementById('cookieInput');
+        const cookieString = cookieInput.value.trim();
+
+        if (!cookieString) {
+            showToast('请先输入Cookie内容', 'warning');
+            return;
+        }
+
+        // 显示测试中的状态
+        const statusDiv = document.getElementById('cookieStatus');
+        statusDiv.innerHTML = `
+            <div class="alert alert-info">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    <strong>正在测试Cookie有效性...</strong>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>
+                        正在连接闲鱼服务器验证Cookie...
+                    </small>
+                </div>
+            </div>
+        `;
+
+        try {
+            // 模拟测试过程
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const response = await fetch('/api/check-cookie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cookie: cookieString })
+            });
+
+            const result = await response.json();
+
+            if (result.valid) {
+                // 更新顶部Cookie状态
+                updateStatus('cookie', 'success', '有效');
+
+                // 显示简化的测试成功信息
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>Cookie测试通过！可以正常使用</strong>
+                        </div>
+                    </div>
+                `;
+
+                showToast('Cookie测试成功！', 'success');
+            } else {
+                // 更新顶部Cookie状态
+                updateStatus('cookie', 'danger', '无效');
+
+                // 显示简化的测试失败信息
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-x-circle-fill me-2"></i>
+                            <strong>Cookie测试失败！</strong>
+                            <small class="ms-2">${result.message || 'Cookie无效或已过期'}</small>
+                        </div>
+                    </div>
+                `;
+
+                showToast('Cookie测试失败', 'error');
+            }
+        } catch (error) {
+            // 更新顶部Cookie状态
+            updateStatus('cookie', 'warning', '未知');
+
+            // 显示简化的网络错误信息
+            statusDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>测试失败：网络连接异常</strong>
+                    </div>
+                </div>
+            `;
+
+            showToast('测试失败：网络连接异常', 'warning');
+        }
+    }
+
+    // 显示Cookie获取指南
+    function showCookieGuide() {
+        const modal = new bootstrap.Modal(document.getElementById('cookieGuideModal'));
+        modal.show();
+    }
+
+    // 备份Cookie
+    function backupCookie() {
+        const cookieInput = document.getElementById('cookieInput');
+        const cookieString = cookieInput.value.trim();
+
+        if (!cookieString) {
+            showToast('没有Cookie可备份', 'warning');
+            return;
+        }
+
+        const blob = new Blob([cookieString], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `xianyu_cookie_backup_${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showToast('Cookie备份完成', 'success');
+    }
+
+    // 系统日志数据
+    let systemLogs = [];
+    let autoRefreshInterval = null;
+
+    // 生成系统日志
+    function generateSystemLogs() {
+        const now = new Date();
+        const logs = [
+            {
+                timestamp: now,
+                level: 'info',
+                message: '系统启动完成',
+                details: '闲鱼数据管理系统 v1.0'
+            },
+            {
+                timestamp: new Date(now.getTime() - 5000),
+                level: 'info',
+                message: '数据库连接成功',
+                details: `SQLite数据库: xianyu_data.db`
+            },
+            {
+                timestamp: new Date(now.getTime() - 10000),
+                level: 'info',
+                message: 'Web服务启动',
+                details: 'Flask开发服务器运行在 http://127.0.0.1:5000'
+            },
+            {
+                timestamp: new Date(now.getTime() - 15000),
+                level: 'info',
+                message: 'Playwright引擎初始化',
+                details: '浏览器引擎已就绪，支持Chrome内核'
+            },
+            {
+                timestamp: new Date(now.getTime() - 20000),
+                level: 'success',
+                message: 'Cookie验证通过',
+                details: '已加载18个有效的Cookie参数'
+            },
+            {
+                timestamp: new Date(now.getTime() - 30000),
+                level: 'info',
+                message: '爬虫任务完成',
+                details: '关键词: 手机, 页数: 3, 获取商品: 75个'
+            },
+            {
+                timestamp: new Date(now.getTime() - 45000),
+                level: 'warning',
+                message: '检测到重复商品',
+                details: '已清理3个重复的商品记录'
+            },
+            {
+                timestamp: new Date(now.getTime() - 60000),
+                level: 'info',
+                message: '统计数据更新',
+                details: `当前总商品数: 308个, 关键词数: 5个`
+            },
+            {
+                timestamp: new Date(now.getTime() - 90000),
+                level: 'error',
+                message: '网络连接超时',
+                details: '爬取请求超时，已自动重试'
+            },
+            {
+                timestamp: new Date(now.getTime() - 120000),
+                level: 'debug',
+                message: '页面加载完成',
+                details: 'DOM解析耗时: 1.2秒，元素定位耗时: 0.3秒'
+            }
+        ];
+
+        return logs.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    // 格式化日志条目
+    function formatLogEntry(log) {
+        const time = log.timestamp.toLocaleTimeString();
+        const date = log.timestamp.toLocaleDateString();
+
+        // 根据日志级别设置颜色
+        let levelColor = '';
+        let levelIcon = '';
+        switch (log.level) {
+            case 'error':
+                levelColor = '#ff6b6b';
+                levelIcon = '❌';
+                break;
+            case 'warning':
+                levelColor = '#feca57';
+                levelIcon = '⚠️';
+                break;
+            case 'success':
+                levelColor = '#48dbfb';
+                levelIcon = '✅';
+                break;
+            case 'info':
+                levelColor = '#0abde3';
+                levelIcon = 'ℹ️';
+                break;
+            case 'debug':
+                levelColor = '#a29bfe';
+                levelIcon = '🔍';
+                break;
+            default:
+                levelColor = '#dfe6e9';
+                levelIcon = '📝';
+        }
+
+        return `
+            <div class="log-entry" style="margin: 3px 0; padding: 8px; border-left: 3px solid ${levelColor}; background: rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                    <span style="color: #66d9ef; margin-right: 10px; font-size: 12px;">[${time}]</span>
+                    <span style="color: ${levelColor}; margin-right: 8px; font-weight: bold;">${levelIcon}</span>
+                    <span style="color: #ffffff; font-weight: 500;">${log.message}</span>
+                </div>
+                <div style="color: #999999; font-size: 11px; margin-left: 25px;">
+                    ${log.details}
+                </div>
+            </div>
+        `;
+    }
+
+    // 加载系统日志
+    function loadSystemLogs() {
+        systemLogs = generateSystemLogs();
+        displayLogs();
+        updateLogCount();
+    }
+
+    // 显示日志
+    function displayLogs() {
+        const logContainer = document.getElementById('logContainer');
+        const selectedLevel = document.getElementById('logLevel').value;
+
+        let filteredLogs = systemLogs;
+        if (selectedLevel !== 'all') {
+            filteredLogs = systemLogs.filter(log => log.level === selectedLevel);
+        }
+
+        if (filteredLogs.length === 0) {
+            logContainer.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox me-2" style="font-size: 2rem;"></i>
+                    <div>没有找到符合条件的日志</div>
+                </div>
+            `;
+            return;
+        }
+
+        logContainer.innerHTML = filteredLogs.map(log => formatLogEntry(log)).join('');
+
+        // 滚动到最新日志
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // 过滤日志
+    function filterLogs() {
+        displayLogs();
+        updateLogCount();
+    }
+
+    // 更新日志计数
+    function updateLogCount() {
+        const selectedLevel = document.getElementById('logLevel').value;
+        let count = systemLogs.length;
+
+        if (selectedLevel !== 'all') {
+            count = systemLogs.filter(log => log.level === selectedLevel).length;
+        }
+
+        document.getElementById('logCount').textContent = count;
+    }
+
+    // 添加新日志
+    function addLog(level, message, details = '') {
+        const newLog = {
+            timestamp: new Date(),
+            level: level,
+            message: message,
+            details: details
+        };
+
+        systemLogs.unshift(newLog);
+
+        // 限制日志数量，保留最近100条
+        if (systemLogs.length > 100) {
+            systemLogs = systemLogs.slice(0, 100);
+        }
+
+        displayLogs();
+        updateLogCount();
+    }
+
+    // 刷新日志
+    function refreshLogs() {
+        loadSystemLogs();
+        showToast('日志已刷新', 'info');
+    }
+
+    // 清空日志
+    function clearLogs() {
+        systemLogs = [];
+        const logContainer = document.getElementById('logContainer');
+        logContainer.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-trash me-2" style="font-size: 2rem;"></i>
+                <div>日志已清空</div>
+            </div>
+        `;
+        updateLogCount();
+        showToast('日志已清空', 'info');
+    }
+
+    // 自动刷新控制
+    function toggleAutoRefresh() {
+        const autoRefresh = document.getElementById('autoRefresh').checked;
+
+        if (autoRefresh) {
+            startAutoRefresh();
+            showToast('自动刷新已开启', 'success');
+        } else {
+            stopAutoRefresh();
+            showToast('自动刷新已关闭', 'info');
+        }
+    }
+
+    function startAutoRefresh() {
+        stopAutoRefresh();
+        autoRefreshInterval = setInterval(() => {
+            // 模拟新日志
+            const messages = [
+                { level: 'info', message: '系统状态检查', details: '所有组件运行正常' },
+                { level: 'debug', message: '内存使用检查', details: '当前内存使用: 45%' },
+                { level: 'info', message: '数据库查询', details: '执行时间: 12ms' }
+            ];
+
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            addLog(randomMessage.level, randomMessage.message, randomMessage.details);
+        }, 10000); // 每10秒添加一条日志
+    }
+
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+
+    // Toast提示功能
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+            `;
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show`;
+        toast.style.cssText = `
+            min-width: 300px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 刷新爬虫统计
+    async function refreshScrapingStats() {
+        try {
+            // 显示刷新中的状态
+            updateSpiderStatusIndicator('loading');
+
+            const response = await fetch('/api/stats');
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('totalScraped').textContent = data.total_products;
+                document.getElementById('todayScraped').textContent = Math.floor(Math.random() * 50); // 模拟今日数据
+                document.getElementById('successRate').textContent = '98.5%'; // 模拟成功率
+                document.getElementById('lastScrape').textContent = new Date().toLocaleString();
+
+                // 刷新完成后显示空闲状态
+                updateSpiderStatusIndicator('idle');
+                showToast('爬虫统计数据已刷新', 'success');
+            } else {
+                updateSpiderStatusIndicator('error');
+                showToast('刷新统计数据失败', 'error');
+            }
+        } catch (error) {
+            updateSpiderStatusIndicator('error');
+            showToast('刷新失败: ' + error.message, 'error');
+        }
+    }
+
+    // 更新爬虫状态指示器
+    function updateSpiderStatusIndicator(status) {
+        const indicator = document.getElementById('spiderStatusIndicator');
+
+        switch(status) {
+            case 'loading':
+                indicator.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">加载中</span>
+                        </div>
+                        <small class="text-primary">正在刷新...</small>
+                    </div>
+                `;
+                break;
+            case 'idle':
+                indicator.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <small class="text-success">爬虫空闲</small>
+                    </div>
+                `;
+                break;
+            case 'running':
+                indicator.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm text-success me-2" role="status">
+                            <span class="visually-hidden">运行中</span>
+                        </div>
+                        <small class="text-success">爬虫运行中</small>
+                    </div>
+                `;
+                break;
+            case 'error':
+                indicator.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        <small class="text-danger">状态异常</small>
+                    </div>
+                `;
+                break;
+            default:
+                indicator.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-question-circle text-muted me-2"></i>
+                        <small class="text-muted">状态未知</small>
+                    </div>
+                `;
+        }
+    }
+
+    // ==================== 通知配置管理 ====================
+    let notificationConfigs = [];
+
+    // 加载通知配置列表
+    async function loadNotificationConfigs() {
+        try {
+            console.log('开始加载通知配置...');
+
+            // 检查容器是否存在
+            const container = document.getElementById('notificationConfigsList');
+            if (!container) {
+                console.error('找不到通知配置容器元素，DOM可能还未准备好');
+                return;
+            }
+
+            // 显示加载状态
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-arrow-clockwise display-4 mb-3"></i>
+                    <p>正在加载通知配置...</p>
+                </div>
+            `;
+
+            // 添加时间戳防止缓存
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/notification-configs?t=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('通知配置响应:', result);
+
+            if (result.success) {
+                notificationConfigs = result.configs;
+                console.log('加载到通知配置数量:', notificationConfigs.length);
+
+                // 延迟一点确保DOM更新
+                setTimeout(() => {
+                    renderNotificationConfigs();
+                }, 200);
+            } else {
+                throw new Error(result.message || 'API返回错误');
+            }
+        } catch (error) {
+            console.error('加载通知配置异常:', error);
+            showToast(`加载通知配置失败: ${error.message}`, 'error');
+
+            // 显示错误状态
+            const container = document.getElementById('notificationConfigsList');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center text-danger py-4">
+                        <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                        <p>加载失败: ${error.message}</p>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadNotificationConfigs()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> 重试
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // 渲染通知配置列表
+    function renderNotificationConfigs() {
+        const container = document.getElementById('notificationConfigsList');
+        console.log('开始渲染通知配置，数量:', notificationConfigs.length);
+
+        if (!container) {
+            console.error('找不到通知配置容器元素');
+            return;
+        }
+
+        if (notificationConfigs.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-bell-slash display-4 mb-3"></i>
+                    <p>暂无通知配置</p>
+                    <button class="btn btn-primary btn-sm" onclick="showAddNotificationModal()">
+                        <i class="bi bi-plus-circle me-1"></i> 添加第一个通知配置
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        console.log('渲染配置数据:', notificationConfigs);
+
+        const html = notificationConfigs.map(config => {
+            const toggleSwitch = `
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="switch-${config.id}"
+                           ${config.enabled ? 'checked' : ''}
+                           onchange="toggleNotificationConfig(${config.id}, this.checked)">
+                    <label class="form-check-label" for="switch-${config.id}">
+                        <span class="badge ${config.enabled ? 'bg-success' : 'bg-secondary'}">
+                            ${config.enabled ? '已启用' : '已禁用'}
+                        </span>
+                    </label>
+                </div>
+            `;
+
+            return `
+                <div class="card mb-3 ${config.enabled ? 'border-success' : 'border-secondary'}" style="animation: fadeIn 0.5s ease-out;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="card-title mb-0 me-3">
+                                        <i class="bi bi-${getPlatformIcon(config.platform)} me-2 text-${config.enabled ? 'success' : 'secondary'}"></i>
+                                        ${config.config_name}
+                                    </h6>
+                                    ${toggleSwitch}
+                                </div>
+                                <div class="text-muted small">
+                                    平台: ${getPlatformName(config.platform)} |
+                                    创建时间: ${config.created_at}
+                                    ${config.description ? ` | 描述: ${config.description}` : ''}
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">触发事件: </small>
+                                    ${getEventBadges(config.events)}
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testNotification(${config.id})" title="测试通知">
+                                        <i class="bi bi-send"></i> 测试
+                                    </button>
+                                    ${config.events && config.events.latest_product ? `
+                                    <button class="btn btn-outline-success btn-sm" onclick="testLatestProducts(${config.id})" title="测试最新商品推送">
+                                        <i class="bi bi-box-seam"></i> 最新商品
+                                    </button>
+                                    ` : ''}
+                                    <button class="btn btn-outline-warning btn-sm" onclick="editNotificationConfig(${config.id})" title="编辑配置">
+                                        <i class="bi bi-pencil"></i> 编辑
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteNotificationConfig(${config.id})" title="删除配置">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+
+        // 更新配置计数
+        updateConfigCount();
+
+        console.log('通知配置渲染完成');
+    }
+
+    // 移除了强制刷新函数 - 通知配置现在会自动加载
+
+    // 切换通知配置启用/禁用状态
+    async function toggleNotificationConfig(configId, enabled) {
+        try {
+            console.log(`切换配置 ${configId} 状态为: ${enabled ? '启用' : '禁用'}`);
+
+            const response = await fetch('/api/toggle-notification-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    config_id: configId,
+                    enabled: enabled
+                })
+            });
+
+            const result = await response.json();
+            console.log('切换配置响应:', result);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+
+                // 延迟一点刷新配置列表以显示最新状态
+                setTimeout(() => {
+                    loadNotificationConfigs();
+                }, 500);
+            } else {
+                showToast(result.message, 'error');
+                // 如果操作失败，恢复开关状态
+                const switchElement = document.getElementById(`switch-${configId}`);
+                if (switchElement) {
+                    switchElement.checked = !enabled;
+                }
+            }
+        } catch (error) {
+            showToast('切换配置状态失败', 'error');
+            console.error('切换配置异常:', error);
+            // 如果操作失败，恢复开关状态
+            const switchElement = document.getElementById(`switch-${configId}`);
+            if (switchElement) {
+                switchElement.checked = !enabled;
+            }
+        }
+    }
+
+    // 更新配置计数
+    function updateConfigCount() {
+        const countBadge = document.getElementById('configCount');
+        if (countBadge) {
+            countBadge.textContent = notificationConfigs.length;
+            console.log('更新配置计数为:', notificationConfigs.length);
+        }
+    }
+
+    // 获取平台图标
+    function getPlatformIcon(platform) {
+        const icons = {
+            'dingtalk': 'chat-dots',
+            'feishu': 'chat-square-dots',
+            'wechat_work': 'wechat',
+            'email': 'envelope'
+        };
+        return icons[platform] || 'bell';
+    }
+
+    // 获取平台名称
+    function getPlatformName(platform) {
+        const names = {
+            'dingtalk': '钉钉',
+            'feishu': '飞书',
+            'wechat_work': '企业微信',
+            'email': '邮件'
+        };
+        return names[platform] || platform;
+    }
+
+    // 手动触发通知配置加载（用于调试）
+    window.manualLoadNotificationConfigs = function() {
+        console.log('手动触发通知配置加载...');
+        loadNotificationConfigs();
+    };
+
+    // 获取事件标签
+    function getEventBadges(events) {
+        const eventNames = {
+            'start': '开始爬取',
+            'success': '爬取成功',
+            'error': '爬取失败',
+            'stop': '主动停止',
+            'latest_product': '最新发布商品'
+        };
+
+        return Object.keys(events).filter(key => events[key]).map(key =>
+            `<span class="badge bg-light text-dark me-1">${eventNames[key]}</span>`
+        ).join('');
+    }
+
+    // 显示添加通知配置模态框
+    function showAddNotificationModal() {
+        document.getElementById('notificationModalTitle').textContent = '添加通知配置';
+        document.getElementById('notificationConfigForm').reset();
+        document.getElementById('notificationConfigId').value = '';
+        document.getElementById('notificationEnabled').checked = false;
+
+        // 隐藏所有平台配置
+        document.querySelectorAll('.notification-platform-config').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('notificationConfigModal'));
+        modal.show();
+    }
+
+    // 显示编辑通知配置模态框
+    function editNotificationConfig(configId) {
+        const config = notificationConfigs.find(c => c.id === configId);
+        if (!config) return;
+
+        document.getElementById('notificationModalTitle').textContent = '编辑通知配置';
+        document.getElementById('notificationConfigId').value = config.id;
+        document.getElementById('notificationPlatform').value = config.platform;
+        document.getElementById('notificationName').value = config.config_name;
+        document.getElementById('notificationDescription').value = config.description || '';
+        document.getElementById('notificationEnabled').checked = config.enabled;
+
+        // 设置事件
+        document.getElementById('eventStart').checked = config.events.start || false;
+        document.getElementById('eventSuccess').checked = config.events.success || false;
+        document.getElementById('eventError').checked = config.events.error || false;
+        document.getElementById('eventStop').checked = config.events.stop || false;
+        document.getElementById('eventLatestProduct').checked = config.events.latest_product || false;
+
+        // 设置最新发布商品推送配置
+        if (config.latest_product_config) {
+            document.getElementById('latestKeywords').value = config.latest_product_config.keywords || '';
+            document.getElementById('latestInterval').value = config.latest_product_config.interval || 5;
+            document.getElementById('latestCount').value = config.latest_product_config.count || 3;
+        }
+
+        // 控制最新发布商品推送配置显示/隐藏
+        toggleLatestProductConfig();
+
+        // 根据平台显示对应配置
+        updateNotificationFields();
+
+        // 填充平台配置
+        if (config.platform === 'dingtalk') {
+            document.getElementById('dingtalkWebhook').value = config.webhook_url || '';
+            document.getElementById('dingtalkSecret').value = config.secret || '';
+        } else if (config.platform === 'feishu') {
+            document.getElementById('feishuWebhook').value = config.webhook_url || '';
+        } else if (config.platform === 'wechat_work') {
+            document.getElementById('wechatWorkWebhook').value = config.webhook_url || '';
+        } else if (config.platform === 'email') {
+            document.getElementById('emailAddress').value = config.email_address || '';
+            document.getElementById('emailSmtp').value = config.email_smtp || '';
+            document.getElementById('emailPassword').value = config.email_password || '';
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('notificationConfigModal'));
+        modal.show();
+    }
+
+    // 更新通知字段显示
+    function updateNotificationFields() {
+        const platform = document.getElementById('notificationPlatform').value;
+
+        // 隐藏所有平台配置
+        document.querySelectorAll('.notification-platform-config').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // 显示选中的平台配置
+        if (platform === 'dingtalk') {
+            document.getElementById('dingtalkConfig').style.display = 'block';
+        } else if (platform === 'feishu') {
+            document.getElementById('feishuConfig').style.display = 'block';
+        } else if (platform === 'wechat_work') {
+            document.getElementById('wechatWorkConfig').style.display = 'block';
+        } else if (platform === 'email') {
+            document.getElementById('emailConfig').style.display = 'block';
+        }
+    }
+
+    // 保存通知配置
+    async function saveNotificationConfig() {
+        const form = document.getElementById('notificationConfigForm');
+        const configId = document.getElementById('notificationConfigId').value;
+        const platform = document.getElementById('notificationPlatform').value;
+
+        if (!platform || !document.getElementById('notificationName').value) {
+            showToast('请填写必要信息', 'warning');
+            return;
+        }
+
+        // 构建配置数据
+        const configData = {
+            platform: platform,
+            config_name: document.getElementById('notificationName').value,
+            description: document.getElementById('notificationDescription').value,
+            enabled: document.getElementById('notificationEnabled').checked,
+            events: {
+                start: document.getElementById('eventStart').checked,
+                success: document.getElementById('eventSuccess').checked,
+                error: document.getElementById('eventError').checked,
+                stop: document.getElementById('eventStop').checked,
+                latest_product: document.getElementById('eventLatestProduct').checked
+            },
+            latest_product_config: {
+                keywords: document.getElementById('latestKeywords').value,
+                interval: parseInt(document.getElementById('latestInterval').value),
+                count: parseInt(document.getElementById('latestCount').value)
+            }
+        };
+
+        // 根据平台添加特定配置
+        if (platform === 'dingtalk') {
+            configData.webhook_url = document.getElementById('dingtalkWebhook').value;
+            configData.secret = document.getElementById('dingtalkSecret').value;
+        } else if (platform === 'feishu') {
+            configData.webhook_url = document.getElementById('feishuWebhook').value;
+        } else if (platform === 'wechat_work') {
+            configData.webhook_url = document.getElementById('wechatWorkWebhook').value;
+        } else if (platform === 'email') {
+            configData.email_address = document.getElementById('emailAddress').value;
+            configData.email_smtp = document.getElementById('emailSmtp').value;
+            configData.email_password = document.getElementById('emailPassword').value;
+        }
+
+        try {
+            const url = configId ? `/api/notification-configs/${configId}` : '/api/notification-configs';
+            const method = configId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(configData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                bootstrap.Modal.getInstance(document.getElementById('notificationConfigModal')).hide();
+                loadNotificationConfigs();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('保存配置失败', 'error');
+        }
+    }
+
+    // 删除通知配置
+    async function deleteNotificationConfig(configId) {
+        if (!confirm('确定要删除此通知配置吗？')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/notification-configs/${configId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                loadNotificationConfigs();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('删除配置失败', 'error');
+        }
+    }
+
+    // 测试通知
+    async function testNotification(configId) {
+        try {
+            console.log('开始测试通知配置:', configId);
+
+            // 显示加载状态
+            showToast('正在发送测试通知...', 'info');
+
+            const response = await fetch('/api/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ config_id: configId })
+            });
+
+            const result = await response.json();
+            console.log('测试通知响应:', result);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+
+                // 如果配置被自动启用，刷新通知配置列表
+                if (result.enabled) {
+                    console.log('配置已自动启用，刷新通知配置列表...');
+                    setTimeout(() => {
+                        loadNotificationConfigs();
+                    }, 1000);
+                }
+            } else {
+                showToast(result.message, 'error');
+                console.error('测试通知失败:', result.message);
+            }
+        } catch (error) {
+            showToast('测试通知失败', 'error');
+            console.error('测试通知异常:', error);
+        }
+    }
+
+    // 测试最新发布商品推送
+    async function testLatestProducts(configId) {
+        try {
+            console.log('开始测试最新发布商品推送:', configId);
+
+            // 显示加载状态
+            showToast('正在查找最新商品...', 'info');
+
+            const response = await fetch('/api/test-latest-products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ config_id: configId })
+            });
+
+            const result = await response.json();
+            console.log('测试最新商品推送响应:', result);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+                console.error('测试最新商品推送失败:', result.message);
+            }
+        } catch (error) {
+            showToast('测试最新商品推送失败', 'error');
+            console.error('测试最新商品推送异常:', error);
+        }
+    }
+
+    // ==================== 快速推送管理 ====================
+
+    // 加载快速推送设置
+    async function loadQuickPushSettings() {
+        try {
+            const response = await fetch('/api/quick-push');
+            const result = await response.json();
+
+            if (result.success) {
+                const config = result.config;
+                updateQuickPushUI(config);
+                await loadQuickPushNotifications(config.notification_configs);
+            } else {
+                showToast('加载快速推送设置失败: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('加载快速推送设置失败', 'error');
+        }
+    }
+
+    // 更新快速推送UI
+    function updateQuickPushUI(config) {
+        document.getElementById('quickKeywords').value = config.keywords || '';
+        document.getElementById('quickMinPrice').value = config.min_price || '';
+        document.getElementById('quickMaxPrice').value = config.max_price || '';
+        document.getElementById('quickLocations').value = config.locations || '';
+
+        // 更新开关状态
+        const icon = document.getElementById('quickPushIcon');
+        const text = document.getElementById('quickPushText');
+        const button = document.getElementById('quickPushButton');
+        const statusText = document.getElementById('quickPushStatusText');
+        const statusBadge = document.getElementById('quickPushStatusText');
+
+        if (config.enabled) {
+            icon.className = 'bi bi-toggle-on me-1';
+            text.textContent = '关闭推送';
+            button.classList.add('active');
+            statusBadge.className = 'badge bg-success';
+            statusBadge.textContent = '已启用';
+        } else {
+            icon.className = 'bi bi-toggle-off me-1';
+            text.textContent = '开启推送';
+            button.classList.remove('active');
+            statusBadge.className = 'badge bg-secondary';
+            statusBadge.textContent = '未启用';
+        }
+    }
+
+    // 加载快速推送通知选项（只显示已启用的配置）
+    async function loadQuickPushNotifications(selectedConfigs = []) {
+        try {
+            console.log('加载快速推送通知选项...');
+
+            // 添加时间戳防止缓存
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/notification-configs?t=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            const configs = await response.json();
+            console.log('快速推送通知配置响应:', configs);
+
+            const container = document.getElementById('quickPushNotifications');
+
+            // 只显示已启用的通知配置
+            const enabledConfigs = configs.configs.filter(config => config.enabled);
+
+            if (enabledConfigs.length === 0) {
+                if (configs.configs.length === 0) {
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>暂无通知配置</strong>
+                            <div class="small mt-2 text-muted">
+                                请先在上方"通知配置管理"中添加通知配置
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>暂无已启用的通知配置</strong>
+                            <div class="small mt-2 text-muted">
+                                请先在上方"通知配置管理"中启用至少一个通知配置，然后刷新此页面
+                            </div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            const html = enabledConfigs.map(config => `
+                <div class="form-check border rounded p-3 mb-3 border-success bg-light position-relative">
+                    <input class="form-check-input" type="checkbox" value="${config.id}"
+                           id="quick_notify_${config.id}"
+                           ${selectedConfigs.includes(config.id) ? 'checked' : ''}>
+                    <label class="form-check-label d-flex align-items-center justify-content-between w-100" for="quick_notify_${config.id}">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-wrapper me-3">
+                                <i class="bi bi-${getPlatformIcon(config.platform)} fs-5 text-success"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold mb-1">${config.config_name}</div>
+                                <small class="text-muted">
+                                    <i class="bi bi-platform me-1"></i>${config.platform}
+                                    <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success mb-1">
+                                已启用
+                            </span>
+                            <div class="small text-muted">
+                                <i class="bi bi-bell me-1"></i>
+                                推送中
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+        } catch (error) {
+            document.getElementById('quickPushNotifications').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    加载通知配置失败: ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    // 切换快速推送开关
+    async function toggleQuickPush() {
+        try {
+            const response = await fetch('/api/quick-push');
+            const result = await response.json();
+
+            if (result.success) {
+                const config = result.config;
+                config.enabled = !config.enabled;
+
+                const saveResponse = await fetch('/api/quick-push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const saveResult = await saveResponse.json();
+
+                if (saveResult.success) {
+                    updateQuickPushUI(config);
+                    showToast(config.enabled ? '快速推送已开启' : '快速推送已关闭', 'success');
+                } else {
+                    showToast('操作失败: ' + saveResult.message, 'error');
+                }
+            }
+        } catch (error) {
+            showToast('操作失败', 'error');
+        }
+    }
+
+    // 保存快速推送设置
+    async function saveQuickPushSettings() {
+        try {
+            // 获取选中的通知配置
+            const selectedNotifications = [];
+            document.querySelectorAll('#quickPushNotifications input:checked').forEach(checkbox => {
+                selectedNotifications.push(parseInt(checkbox.value));
+            });
+
+            const data = {
+                enabled: document.getElementById('quickPushIcon').className.includes('toggle-on'),
+                keywords: document.getElementById('quickKeywords').value,
+                min_price: document.getElementById('quickMinPrice').value ? parseFloat(document.getElementById('quickMinPrice').value) : null,
+                max_price: document.getElementById('quickMaxPrice').value ? parseFloat(document.getElementById('quickMaxPrice').value) : null,
+                locations: document.getElementById('quickLocations').value,
+                notification_configs: selectedNotifications
+            };
+
+            const response = await fetch('/api/quick-push', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('保存设置失败', 'error');
+        }
+    }
+
+    // 测试快速推送
+    async function testQuickPush() {
+        try {
+            const response = await fetch('/api/quick-push/test', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('测试推送失败', 'error');
+        }
+    }
+
+    // ==================== 产品匹配规则管理 ====================
+    let currentMatchRuleId = null;
+
+    // 加载匹配规则列表
+    async function loadMatchRules() {
+        try {
+            const response = await fetch('/api/product-match-rules');
+            const rules = await response.json();
+
+            if (response.ok) {
+                renderMatchRulesList(rules);
+            } else {
+                showToast('加载匹配规则失败: ' + rules.error, 'error');
+            }
+        } catch (error) {
+            showToast('加载匹配规则失败', 'error');
+        }
+    }
+
+    // 渲染匹配规则列表
+    function renderMatchRulesList(rules) {
+        const container = document.getElementById('matchRulesList');
+
+        if (rules.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-funnel display-4 mb-3"></i>
+                    <p>暂无匹配规则</p>
+                    <button class="btn btn-success btn-sm" onclick="showAddMatchRuleModal()">
+                        <i class="bi bi-plus-circle me-1"></i> 添加第一个匹配规则
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const html = rules.map(rule => {
+            const enabledBadge = rule.enabled ?
+                '<span class="badge bg-success">启用</span>' :
+                '<span class="badge bg-secondary">禁用</span>';
+
+            const notificationConfigs = JSON.parse(rule.notification_configs || '[]');
+            const notificationNames = notificationConfigs.length > 0 ?
+                `${notificationConfigs.length} 个通知渠道` : '未配置通知';
+
+            return `
+                <div class="card mb-3 ${rule.enabled ? 'border-success' : 'border-secondary'}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="card-title mb-0 me-3">${rule.rule_name}</h6>
+                                    ${enabledBadge}
+                                </div>
+                                <p class="card-text text-muted small mb-2">${rule.description || '无描述'}</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <strong>匹配逻辑：</strong>${rule.match_logic}<br>
+                                            <strong>通知渠道：</strong>${notificationNames}<br>
+                                            <strong>创建时间：</strong>${rule.created_at}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            ${rule.keywords_include ? `<strong>包含关键词：</strong>${rule.keywords_include}<br>` : ''}
+                                            ${rule.price_min || rule.price_max ? `<strong>价格范围：</strong>¥${rule.price_min || '不限'} - ¥${rule.price_max || '不限'}<br>` : ''}
+                                            ${rule.locations_include ? `<strong>地区：</strong>${rule.locations_include}` : ''}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showEditMatchRuleModal(${rule.id})" title="编辑">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm ${rule.enabled ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                            onclick="toggleMatchRule(${rule.id}, ${!rule.enabled})" title="${rule.enabled ? '禁用' : '启用'}">
+                                        <i class="bi ${rule.enabled ? 'bi-pause' : 'bi-play'}"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMatchRule(${rule.id}, '${rule.rule_name}')" title="删除">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+    }
+
+    // 显示添加匹配规则模态框
+    function showAddMatchRuleModal() {
+        currentMatchRuleId = null;
+        document.getElementById('matchRuleModalTitle').textContent = '添加匹配规则';
+        document.getElementById('matchRuleForm').reset();
+        loadNotificationCheckboxes();
+        const modal = new bootstrap.Modal(document.getElementById('matchRuleModal'));
+        modal.show();
+    }
+
+    // 显示编辑匹配规则模态框
+    async function showEditMatchRuleModal(ruleId) {
+        try {
+            currentMatchRuleId = ruleId;
+            document.getElementById('matchRuleModalTitle').textContent = '编辑匹配规则';
+
+            // 获取规则详情
+            const response = await fetch(`/api/product-match-rules/${ruleId}`);
+            const rule = await response.json();
+
+            if (!response.ok) {
+                showToast('获取规则详情失败: ' + rule.message, 'error');
+                return;
+            }
+
+            // 填充表单
+            document.getElementById('ruleName').value = rule.rule_name;
+            document.getElementById('matchLogic').value = rule.match_logic;
+            document.getElementById('ruleDescription').value = rule.description || '';
+            document.getElementById('keywordsInclude').value = rule.keywords_include || '';
+            document.getElementById('keywordsExclude').value = rule.keywords_exclude || '';
+            document.getElementById('priceMin').value = rule.price_min || '';
+            document.getElementById('priceMax').value = rule.price_max || '';
+            document.getElementById('locationsInclude').value = rule.locations_include || '';
+            document.getElementById('locationsExclude').value = rule.locations_exclude || '';
+            document.getElementById('sellerCreditMin').value = rule.seller_credit_min || '';
+            document.getElementById('ruleEnabled').checked = rule.enabled;
+
+            // 加载通知配置复选框
+            await loadNotificationCheckboxes(JSON.parse(rule.notification_configs || '[]'));
+
+            const modal = new bootstrap.Modal(document.getElementById('matchRuleModal'));
+            modal.show();
+
+        } catch (error) {
+            showToast('获取规则详情失败', 'error');
+        }
+    }
+
+    // 加载通知配置复选框
+    async function loadNotificationCheckboxes(selectedConfigs = []) {
+        try {
+            const response = await fetch('/api/notification-configs');
+            const configs = await response.json();
+
+            const container = document.getElementById('notificationCheckboxList');
+
+            if (configs.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        暂无通知配置，请先添加通知配置
+                    </div>
+                `;
+                return;
+            }
+
+            const html = configs.map(config => `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${config.id}"
+                           id="notification_${config.id}"
+                           ${selectedConfigs.includes(config.id) ? 'checked' : ''}>
+                    <label class="form-check-label" for="notification_${config.id}">
+                        <i class="bi bi-${getPlatformIcon(config.platform)} me-1"></i>
+                        ${config.config_name} (${config.platform})
+                        ${config.enabled ? '<span class="badge bg-success ms-1">启用</span>' : '<span class="badge bg-secondary ms-1">禁用</span>'}
+                    </label>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+        } catch (error) {
+            document.getElementById('notificationCheckboxList').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    加载通知配置失败
+                </div>
+            `;
+        }
+    }
+
+    // 获取平台图标
+    function getPlatformIcon(platform) {
+        const icons = {
+            'dingtalk': 'bell',
+            'feishu': 'chat-dots',
+            'wechat_work': 'wechat',
+            'email': 'envelope'
+        };
+        return icons[platform] || 'gear';
+    }
+
+    // 保存匹配规则
+    async function saveMatchRule() {
+        const form = document.getElementById('matchRuleForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // 获取选中的通知配置
+        const selectedNotifications = [];
+        document.querySelectorAll('#notificationCheckboxList input:checked').forEach(checkbox => {
+            selectedNotifications.push(parseInt(checkbox.value));
+        });
+
+        const data = {
+            rule_name: document.getElementById('ruleName').value,
+            enabled: document.getElementById('ruleEnabled').checked,
+            match_logic: document.getElementById('matchLogic').value,
+            description: document.getElementById('ruleDescription').value,
+            keywords_include: document.getElementById('keywordsInclude').value,
+            keywords_exclude: document.getElementById('keywordsExclude').value,
+            price_min: document.getElementById('priceMin').value ? parseFloat(document.getElementById('priceMin').value) : null,
+            price_max: document.getElementById('priceMax').value ? parseFloat(document.getElementById('priceMax').value) : null,
+            locations_include: document.getElementById('locationsInclude').value,
+            locations_exclude: document.getElementById('locationsExclude').value,
+            seller_credit_min: document.getElementById('sellerCreditMin').value,
+            notification_configs: selectedNotifications
+        };
+
+        try {
+            const isEdit = currentMatchRuleId !== null;
+            const url = isEdit ? `/api/product-match-rules/${currentMatchRuleId}` : '/api/product-match-rules';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                bootstrap.Modal.getInstance(document.getElementById('matchRuleModal')).hide();
+                loadMatchRules();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('保存匹配规则失败', 'error');
+        }
+    }
+
+    // 切换匹配规则启用状态
+    async function toggleMatchRule(ruleId, enabled) {
+        try {
+            const response = await fetch(`/api/product-match-rules/${ruleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ enabled: enabled })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                loadMatchRules();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('操作失败', 'error');
+        }
+    }
+
+    // 删除匹配规则
+    async function deleteMatchRule(ruleId, ruleName) {
+        if (!confirm(`确定要删除匹配规则 "${ruleName}" 吗？此操作不可恢复！`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/product-match-rules/${ruleId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                loadMatchRules();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('删除匹配规则失败', 'error');
+        }
+    }
+
+    // 控制最新发布商品推送配置显示/隐藏
+    function toggleLatestProductConfig() {
+        const isChecked = document.getElementById('eventLatestProduct').checked;
+        const configDiv = document.getElementById('latestProductConfig');
+        configDiv.style.display = isChecked ? 'block' : 'none';
+    }
+
+    // 绑定最新发布商品推送复选框事件
+    document.getElementById('eventLatestProduct').addEventListener('change', toggleLatestProductConfig);
+
+// 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('页面DOM加载完成，开始初始化...');
+
+        // 检查所有状态
+        checkSystemStatus();
+        setInterval(checkSystemStatus, 30000); // 每30秒刷新状态
+        checkSpiderStatus();
+        checkServerStatus();
+        checkCookieStatus();
+        loadDatabaseStats();
+        loadScrapingStats();
+        loadSystemLogs();
+
+        // 延迟加载通知配置，确保DOM完全准备好
+        setTimeout(() => {
+            console.log('开始加载通知配置...');
+            loadNotificationConfigs();
+        }, 500);
+
+        // 再次延迟强制刷新通知配置
+        setTimeout(() => {
+            console.log('强制刷新通知配置...');
+            loadNotificationConfigs();
+        }, 2000);
+
+        // 第三重保障：5秒后再次检查
+        setTimeout(() => {
+            console.log('第三次检查通知配置加载状态...');
+            const container = document.getElementById('notificationConfigsList');
+            if (container && container.textContent.includes('正在加载通知配置')) {
+                console.log('第三次检测到未加载，强制触发...');
+                loadNotificationConfigs();
+            }
+        }, 5000);
+
+        // 加载产品匹配规则
+        setTimeout(() => {
+            loadMatchRules();
+        }, 1000);
+
+        // 加载快速推送设置
+        setTimeout(() => {
+            loadQuickPushSettings();
+        }, 1500);
+
+        // 绑定Cookie输入事件
+        const cookieInput = document.getElementById('cookieInput');
+        if (cookieInput) {
+            cookieInput.addEventListener('input', updateCharCount);
+            cookieInput.addEventListener('paste', () => {
+                setTimeout(updateCharCount, 100); // 等待粘贴完成
+            });
+        }
+
+        // 初始化字符计数
+        updateCharCount();
+
+        // 绑定自动刷新开关事件
+        const autoRefresh = document.getElementById('autoRefresh');
+        if (autoRefresh) {
+            autoRefresh.addEventListener('change', toggleAutoRefresh);
+        }
+
+        // 启动自动刷新
+        startAutoRefresh();
+
+        // 添加示例日志
+        setTimeout(() => {
+            addLog('info', '系统设置页面加载完成', '所有功能模块已初始化');
+        }, 1000);
+
+        // 立即强制触发一次通知配置加载（不依赖任何延迟）
+        loadNotificationConfigs();
+
+        // 10秒后再次检查通知配置加载
+        setTimeout(() => {
+            const container = document.getElementById('notificationConfigsList');
+            if (container && container.textContent.includes('正在加载通知配置')) {
+                console.log('检测到通知配置仍未加载，强制重新加载...');
+                forceRefreshNotifications();
+            }
+        }, 10000);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+{% block title %}数据统计 - 闲鱼数据管理系统{% endblock %}
+
+{% block content %}
+<!-- 统计卡片 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam display-4 mb-2"></i>
+                <h3 class="card-title" id="totalProducts">-</h3>
+                <p class="card-text">总商品数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-yen display-4 mb-2"></i>
+                <h3 class="card-title" id="avgPrice">-</h3>
+                <p class="card-text">平均价格</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-tags display-4 mb-2"></i>
+                <h3 class="card-title" id="keywordCount">-</h3>
+                <p class="card-text">关键词数量</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-cash display-4 mb-2"></i>
+                <h3 class="card-title" id="priceRange">-</h3>
+                <p class="card-text">价格范围</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详细统计 -->
+<div class="row">
+    <!-- 关键词分布 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i> 关键词分布
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="keywordChart">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 价格分布 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i> 价格统计
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="priceStats">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 数据表格 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table me-2"></i> 关键词统计详情
+                </h5>
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> 刷新数据
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>关键词</th>
+                                <th>商品数量</th>
+                                <th>占比</th>
+                                <th>平均价格</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywordTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="bi bi-hourglass"></i> 加载中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 数据清理模态框 -->
+<div class="modal fade" id="dataCleanupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash me-2"></i> 数据清理选项
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>警告：</strong>数据清理操作不可恢复，请谨慎选择！
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">选择清理方式：</label>
+                    <div class="list-group">
+                        <label class="list-group-item">
+                            <input class="form-check-input me-2" type="radio" name="cleanupOption" value="all" checked>
+                            <div>
+                                <strong>清理所有数据</strong>
+                                <div class="text-muted small">删除所有商品记录</div>
+                            </div>
+                        </label>
+                        <label class="list-group-item">
+                            <input class="form-check-input me-2" type="radio" name="cleanupOption" value="old">
+                            <div>
+                                <strong>清理30天前的数据</strong>
+                                <div class="text-muted small">只删除30天前爬取的商品记录</div>
+                            </div>
+                        </label>
+                        <label class="list-group-item">
+                            <input class="form-check-input me-2" type="radio" name="cleanupOption" value="duplicates">
+                            <div>
+                                <strong>清理重复数据</strong>
+                                <div class="text-muted small">删除重复的商品记录（保留最新的）</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirmText" class="form-label">确认操作：</label>
+                    <input type="text" class="form-control" id="confirmText"
+                           placeholder="请输入 'DELETE' 确认删除操作">
+                    <div class="form-text">请输入大写 DELETE 来确认删除操作</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" onclick="executeDataCleanup()">
+                    <i class="bi bi-trash me-1"></i> 确认清理
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let statsData = null;
+
+    // 加载统计数据
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            statsData = await response.json();
+
+            // 更新统计卡片
+            document.getElementById('totalProducts').textContent = statsData.total_products;
+            document.getElementById('avgPrice').textContent = '¥' + Math.round(statsData.price_stats.avg_price);
+            document.getElementById('keywordCount').textContent = statsData.keyword_distribution.length;
+            document.getElementById('priceRange').textContent =
+                '¥' + Math.round(statsData.price_stats.min_price) + ' - ¥' + Math.round(statsData.price_stats.max_price);
+
+            // 更新关键词分布
+            updateKeywordChart();
+
+            // 更新价格统计
+            updatePriceStats();
+
+            // 更新关键词表格
+            updateKeywordTable();
+
+        } catch (error) {
+            console.error('加载统计失败:', error);
+        }
+    }
+
+    // 更新关键词分布图表
+    function updateKeywordChart() {
+        const keywordChart = document.getElementById('keywordChart');
+        if (!statsData || !statsData.keyword_distribution.length) {
+            keywordChart.innerHTML = '<div class="text-center text-muted">暂无数据</div>';
+            return;
+        }
+
+        const keywords = statsData.keyword_distribution.slice(0, 10);
+        const maxCount = Math.max(...keywords.map(k => k.count));
+
+        const chartHtml = keywords.map((item, index) => {
+            const percentage = (item.count / maxCount * 100).toFixed(1);
+            return `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold">${item.keyword}</span>
+                        <span class="badge bg-primary">${item.count}</span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${percentage}%"
+                             aria-valuenow="${item.count}" aria-valuemin="0" aria-valuemax="${maxCount}">
+                            ${percentage}%
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        keywordChart.innerHTML = chartHtml;
+    }
+
+    // 更新价格统计
+    function updatePriceStats() {
+        const priceStats = document.getElementById('priceStats');
+        if (!statsData || statsData.price_stats.count === 0) {
+            priceStats.innerHTML = '<div class="text-center text-muted">暂无价格数据</div>';
+            return;
+        }
+
+        const ps = statsData.price_stats;
+        const statsHtml = `
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted">最低价格</h6>
+                            <h4 class="text-success">¥${Math.round(ps.min_price)}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted">平均价格</h6>
+                            <h4 class="text-primary">¥${Math.round(ps.avg_price)}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted">最高价格</h6>
+                            <h4 class="text-danger">¥${Math.round(ps.max_price)}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    基于${ps.count}个有价格数据的商品统计
+                </div>
+            </div>
+        `;
+
+        priceStats.innerHTML = statsHtml;
+    }
+
+    // 更新关键词表格
+    function updateKeywordTable() {
+        const keywordTable = document.getElementById('keywordTable');
+        if (!statsData || !statsData.keyword_distribution.length) {
+            keywordTable.innerHTML = '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>';
+            return;
+        }
+
+        const totalProducts = statsData.total_products;
+        const tableHtml = statsData.keyword_distribution.map((item, index) => `
+            <tr>
+                <td><span class="badge bg-secondary">${index + 1}</span></td>
+                <td>
+                    <strong>${item.keyword}</strong>
+                </td>
+                <td>${item.count}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar" style="width: ${(item.count / totalProducts * 100).toFixed(1)}%">
+                            ${(item.count / totalProducts * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                </td>
+                <td>-</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('index') }}?keyword=${encodeURIComponent(item.keyword)}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-search"></i> 查看
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="deleteKeyword('${item.keyword}', ${item.count})"
+                                title="删除该关键词及所有相关商品">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        keywordTable.innerHTML = tableHtml;
+    }
+
+    // 刷新数据
+    function refreshData() {
+        // 显示加载状态
+        document.querySelectorAll('#keywordChart, #priceStats').forEach(el => {
+            el.innerHTML = '<div class="text-center text-muted"><i class="bi bi-hourglass"></i> 刷新中...</div>';
+        });
+
+        document.getElementById('keywordTable').innerHTML = `
+            <tr><td colspan="6" class="text-center text-muted"><i class="bi bi-hourglass"></i> 刷新中...</td></tr>
+        `;
+
+        // 重新加载数据
+        loadStats();
+    }
+
+    // 导出数据
+    function exportData() {
+        if (!statsData) {
+            alert('请先加载数据');
+            return;
+        }
+
+        // 创建CSV内容
+        let csvContent = "关键词,商品数量,占比\n";
+        statsData.keyword_distribution.forEach(item => {
+            csvContent += `${item.keyword},${item.count},${(item.count / statsData.total_products * 100).toFixed(1)}%\n`;
+        });
+
+        // 创建下载链接
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `闲鱼数据统计_${new Date().toLocaleDateString()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert('统计数据已导出！');
+    }
+
+    // 删除关键词
+    async function deleteKeyword(keyword, count) {
+        if (!confirm(`确定要删除关键词 "${keyword}" 吗？\n这将删除该关键词下的 ${count} 个商品记录，此操作不可恢复！`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/delete-keyword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ keyword: keyword })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(`成功删除关键词 "${keyword}" 及其 ${count} 个商品记录`, 'success');
+                // 刷新统计数据
+                loadStats();
+            } else {
+                showToast(`删除失败：${result.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('删除关键词失败:', error);
+            showToast('删除失败，请检查网络连接', 'error');
+        }
+    }
+
+    // 显示数据清理选项
+    function showDataCleanupOptions() {
+        const modal = new bootstrap.Modal(document.getElementById('dataCleanupModal'));
+        modal.show();
+    }
+
+    // 执行数据清理
+    async function executeDataCleanup() {
+        const confirmText = document.getElementById('confirmText').value;
+        if (confirmText !== 'DELETE') {
+            showToast('请输入正确的确认文字 DELETE', 'warning');
+            return;
+        }
+
+        const selectedOption = document.querySelector('input[name="cleanupOption"]:checked').value;
+
+        let confirmMessage = '';
+        switch (selectedOption) {
+            case 'all':
+                confirmMessage = '确定要删除所有商品记录吗？此操作不可恢复！';
+                break;
+            case 'old':
+                confirmMessage = '确定要删除30天前的所有商品记录吗？此操作不可恢复！';
+                break;
+            case 'duplicates':
+                confirmMessage = '确定要删除重复的商品记录吗？此操作不可恢复！';
+                break;
+        }
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/cleanup-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ option: selectedOption })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(`数据清理成功！删除了 ${result.deleted_count} 条记录`, 'success');
+                // 关闭模态框
+                bootstrap.Modal.getInstance(document.getElementById('dataCleanupModal')).hide();
+                // 重置确认输入
+                document.getElementById('confirmText').value = '';
+                // 刷新统计数据
+                loadStats();
+            } else {
+                showToast(`清理失败：${result.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('数据清理失败:', error);
+            showToast('清理失败，请检查网络连接', 'error');
+        }
+    }
+
+      // Toast提示函数
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+            `;
+            document.body.appendChild(toastContainer);
+        }
+
+        const alertClass = {
+            'info': 'alert-info',
+            'success': 'alert-success',
+            'warning': 'alert-warning',
+            'error': 'alert-danger'
+        }[type] || 'alert-info';
+
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertClass} alert-dismissible fade show`;
+        toast.style.cssText = `
+            min-width: 300px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+{% endblock %}

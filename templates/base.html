@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}闲鱼数据管理系统{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhijzJHS5UTNO+O34rjLHqrXhYiqSiSgEk8oR5I8i6n3D3MZGl" crossorigin="anonymous">
+    <style>
+        /* 简化三色设计 */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #ffffff;
+            --accent-color: #3498db;
+            --light-gray: #f8f9fa;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --border-radius: 6px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--primary-color);
+        }
+
+        .content-wrapper {
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin: 1rem;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: var(--shadow);
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--primary-color) !important;
+            font-weight: 500;
+            margin: 0 8px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .navbar-nav .nav-link:hover {
+            background-color: var(--light-gray);
+        }
+
+        .navbar-nav .nav-link.active {
+            background-color: var(--accent-color);
+            color: var(--secondary-color) !important;
+        }
+
+        .navbar-text {
+            background-color: var(--light-gray);
+            color: var(--primary-color) !important;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+        }
+
+        /* 卡片样式 */
+        .card {
+            border: 1px solid #e9ecef;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            background-color: var(--secondary-color);
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: var(--light-gray);
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: 1rem 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-info {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-warning {
+            background-color: var(--light-gray);
+            border-color: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .btn-warning:hover {
+            background-color: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .btn-light {
+            background-color: var(--light-gray);
+            border-color: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .btn-light:hover {
+            background-color: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: var(--secondary-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--accent-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-lg {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        /* 表单样式 */
+        .form-control, .form-select {
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+            padding: 10px 12px;
+            transition: var(--transition);
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.1rem rgba(52, 152, 219, 0.25);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+        }
+
+        .form-floating label {
+            color: #6c757d;
+        }
+
+        /* 产品卡片特殊样式 */
+        .product-card {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 价格标签样式 */
+        .price-tag {
+            background-color: var(--light-gray);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: inline-block;
+        }
+
+        /* 徽章样式 */
+        .badge {
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-weight: 500;
+            font-size: 0.8em;
+        }
+
+        .location-badge {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .credit-badge {
+            background-color: var(--light-gray);
+            color: var(--primary-color);
+        }
+
+        /* 统计卡片样式 */
+        .stats-card {
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: var(--border-radius);
+        }
+
+        .stats-card h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card h5 {
+            font-weight: 500;
+        }
+
+        /* 搜索表单样式 */
+        .search-form {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        /* 表格样式 */
+        .table {
+            background: white;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: var(--light-gray);
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 12px;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 分页样式 */
+        .pagination .page-link {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin: 0 2px;
+            color: var(--primary-color);
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* 页脚样式 */
+        footer {
+            background: var(--light-color) !important;
+            border-top: 1px solid #e9ecef;
+            margin-top: auto;
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .btn {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="bi bi-shop"></i> 闲鱼数据管理系统
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="bi bi-house"></i> 商品列表
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('scrape') }}">
+                            <i class="bi bi-download"></i> 数据爬取
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('stats') }}">
+                            <i class="bi bi-bar-chart"></i> 数据统计
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('system_settings') }}">
+                            <i class="bi bi-gear"></i> 系统设置
+                        </a>
+                    </li>
+                </ul>
+
+                <span class="navbar-text me-3">
+                    <i class="bi bi-database"></i>
+                    <span id="total-count">加载中...</span> 条记录
+                </span>
+
+                <!-- 用户信息和登出 -->
+                {% if session.username %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> {{ session.username }}
+                        {% if session.role == 'admin' %}
+                        <span class="badge bg-warning text-dark ms-1">管理员</span>
+                        {% elif session.role == 'trial' %}
+                        <span class="badge bg-info ms-1">体验</span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        {% if session.role == 'trial' %}
+                        <li><h6 class="dropdown-header">体验账户剩余时间</h6></li>
+                        <li><span class="dropdown-item-text">
+                            <i class="bi bi-clock"></i>
+                            <span id="trial-minutes">计算中...</span> 分 <span id="trial-seconds">--</span> 秒
+                        </span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-person"></i> 个人信息
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-gear"></i> 账户设置
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> 退出登录
+                        </a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="container py-5">
+        <div class="content-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- 体验账户30秒警告模态框 -->
+    <div class="modal fade" id="trialWarningModal" tabindex="-1" aria-labelledby="trialWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="trialWarningModalLabel">
+                        <i class="bi bi-exclamation-triangle"></i> 体验时间即将结束
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        <strong>尊敬的体验用户：</strong>
+                    </p>
+                    <p class="mb-3">
+                        您的体验账户剩余时间已不足30秒！系统即将自动退出登录。
+                    </p>
+                    <p class="mb-0">
+                        如需继续使用系统，请联系管理员获取完整访问权限。
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">知道了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 体验账户过期模态框 -->
+    <div class="modal fade" id="trialExpiredModal" tabindex="-1" aria-labelledby="trialExpiredModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="trialExpiredModalLabel">
+                        <i class="bi bi-x-circle"></i> 体验时间已结束
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        <strong>尊敬的体验用户：</strong>
+                    </p>
+                    <p class="mb-3">
+                        您的2分钟体验时间已结束，系统将自动返回登录页面。
+                    </p>
+                    <p class="mb-0">
+                        <span id="logout-countdown">3</span> 秒后自动跳转...
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="window.location.href='/login'">立即返回登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-light text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0 text-muted">
+                闲鱼数据管理系统 - Playwright + 真实Cookie技术
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        // 加载总数统计
+        async function loadTotalCount() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('total-count').textContent = data.total_products;
+            } catch (error) {
+                console.error('加载统计失败:', error);
+                document.getElementById('total-count').textContent = '未知';
+            }
+        }
+
+        // 体验账户倒计时功能
+        let trialTimer = null;
+        let trialWarningShown = false;
+        let trialExpired = false;
+
+        // 加载体验账户剩余时间
+        async function loadTrialInfo() {
+            {% if session.role == 'trial' %}
+            try {
+                const response = await fetch('/api/trial-info');
+                const data = await response.json();
+
+                if (data.remaining_minutes !== undefined && !trialExpired) {
+                    updateTrialDisplay(data.remaining_minutes);
+
+                    // 如果已经过期，立即登出
+                    if (data.is_expired || data.trial_expired) {
+                        trialExpired = true;
+                        showTrialExpiredModal();
+                        return;
+                    }
+
+                    // 开始倒计时
+                    startTrialCountdown(data.remaining_minutes * 60); // 转换为秒数
+                }
+            } catch (error) {
+                console.error('加载体验账户信息失败:', error);
+                if (document.getElementById('trial-minutes')) {
+                    document.getElementById('trial-minutes').textContent = '未知';
+                }
+            }
+            {% endif %}
+        }
+
+        // 更新体验账户显示
+        function updateTrialDisplay(remainingMinutes) {
+            const minutesElement = document.getElementById('trial-minutes');
+            const secondsElement = document.getElementById('trial-seconds');
+
+            if (minutesElement) {
+                minutesElement.textContent = remainingMinutes;
+                secondsElement.textContent = '00';
+
+                // 根据剩余时间显示不同颜色
+                if (remainingMinutes <= 0.5) {
+                    // 少于30秒，红色警告
+                    minutesElement.style.color = '#dc3545';
+                    minutesElement.style.fontWeight = 'bold';
+                    secondsElement.style.color = '#dc3545';
+                } else if (remainingMinutes <= 1) {
+                    // 少于1分钟，橙色警告
+                    minutesElement.style.color = '#fd7e14';
+                    minutesElement.style.fontWeight = 'bold';
+                    secondsElement.style.color = '#fd7e14';
+                } else {
+                    // 正常时间，绿色
+                    minutesElement.style.color = '#28a745';
+                    minutesElement.style.fontWeight = 'normal';
+                    secondsElement.style.color = '#28a745';
+                }
+            }
+        }
+
+        // 开始倒计时
+        function startTrialCountdown(totalSeconds) {
+            if (trialTimer) {
+                clearInterval(trialTimer);
+            }
+
+            trialTimer = setInterval(() => {
+                totalSeconds--;
+
+                if (totalSeconds <= 0) {
+                    clearInterval(trialTimer);
+                    trialExpired = true;
+                    showTrialExpiredModal();
+                    return;
+                }
+
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+
+                const minutesElement = document.getElementById('trial-minutes');
+                const secondsElement = document.getElementById('trial-seconds');
+
+                if (minutesElement && secondsElement) {
+                    minutesElement.textContent = minutes;
+                    secondsElement.textContent = seconds.toString().padStart(2, '0');
+                    updateTrialDisplay(minutes);
+                }
+
+                // 显示30秒警告
+                if (totalSeconds <= 30 && !trialWarningShown) {
+                    trialWarningShown = true;
+                    showTrialWarning();
+                }
+            }, 1000);
+        }
+
+        // 显示30秒警告
+        function showTrialWarning() {
+            const modal = new bootstrap.Modal(document.getElementById('trialWarningModal'));
+            modal.show();
+        }
+
+        // 显示过期弹窗
+        function showTrialExpiredModal() {
+            const modal = new bootstrap.Modal(document.getElementById('trialExpiredModal'));
+            modal.show();
+
+            // 开始倒计时显示
+            let countdown = 3;
+            const countdownElement = document.getElementById('logout-countdown');
+
+            const countdownTimer = setInterval(() => {
+                countdown--;
+                if (countdownElement) {
+                    countdownElement.textContent = countdown;
+                }
+
+                if (countdown <= 0) {
+                    clearInterval(countdownTimer);
+                    window.location.href = '/login';
+                }
+            }, 1000);
+        }
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTotalCount();
+            loadTrialInfo();
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

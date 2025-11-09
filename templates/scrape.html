@@ -1,0 +1,1268 @@
+{% extends "base.html" %}
+
+{% block title %}数据爬取 - 闲鱼数据管理系统{% endblock %}
+
+{% block content %}
+<style>
+    /* 自定义样式增强 */
+    .stat-item {
+        transition: all 0.3s ease;
+        border: 1px solid transparent !important;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #dee2e6 !important;
+    }
+
+    .btn-light:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .h5 {
+        transition: all 0.2s ease;
+    }
+
+    #statusBadge {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    /* 停止按钮脉冲动画 */
+    .pulse-animation {
+        animation: stopBtnPulse 1.5s infinite;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        transition: all 0.3s ease;
+    }
+
+    .pulse-animation:hover {
+        animation: none;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        transform: translateY(-2px);
+    }
+
+    @keyframes stopBtnPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+
+    /* 停止按钮禁用状态样式 */
+    .pulse-animation:disabled {
+        animation: none;
+        opacity: 0.6;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .btn-text {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover .btn-text {
+        transform: translateX(2px);
+    }
+
+    /* 简洁的系统状态卡片样式 */
+    .stat-item {
+        transition: all 0.2s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- 爬取建议 - 独立第一排 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <h6 class="alert-heading">
+                    <i class="bi bi-lightbulb"></i> <strong>爬取建议</strong>
+                </h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>🕐 延迟策略：</strong>
+                        <ul class="mb-0 small">
+                            <li><strong>日常使用</strong>：正常(3秒)或稳健(4秒)</li>
+                            <li><strong>大量爬取</strong>：缓慢(5秒)或很慢(8秒)</li>
+                            <li><strong>避免拦截</strong>：建议≥3秒延迟</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>📄 页数选择：</strong>
+                        <ul class="mb-0 small">
+                            <li><strong>测试验证</strong>：1-2页</li>
+                            <li><strong>常规收集</strong>：3-5页</li>
+                            <li><strong>大量数据</strong>：5-10页</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>🛡️ 安全提示：</strong>
+                        <ul class="mb-0 small">
+                            <li>爬取间隔≥3秒降低风险</li>
+                            <li>避免短时间内大量爬取</li>
+                            <li>定期检查Cookie有效性</li>
+                        </ul>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 主要爬取区域 -->
+        <div class="col-lg-8">
+            <!-- 爬取配置卡片 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search"></i> <span style="color: #ff4757;">闲鱼数据爬取工具</span>
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form id="scrapeForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="keyword" class="form-label fw-bold">
+                                        <i class="bi bi-tag text-primary"></i> 搜索关键词
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-lg" id="keyword" name="keyword"
+                                               value="手机" required placeholder="输入关键词，如：手机、相机">
+                                        <button class="btn btn-outline-primary btn-lg" type="button"
+                                                data-bs-toggle="tooltip" title="从历史中选择" onclick="showKeywordHistory()">
+                                            <i class="bi bi-clock-history"></i> 历史
+                                        </button>
+                                    </div>
+                                    <div class="form-text">输入想要爬取的闲鱼商品关键词</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="max_pages" class="form-label fw-bold">
+                                        <i class="bi bi-file-text text-success"></i> 爬取页数
+                                    </label>
+                                    <select class="form-select form-select-lg" id="max_pages" name="max_pages">
+                                        <option value="1">1页 (约25个)</option>
+                                        <option value="2">2页 (约50个)</option>
+                                        <option value="3" selected>3页 (约75个)</option>
+                                        <option value="5">5页 (约125个)</option>
+                                        <option value="10">10页 (约250个)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="delay" class="form-label fw-bold">
+                                        <i class="bi bi-clock text-warning"></i> 延迟时间
+                                    </label>
+                                    <select class="form-select form-select-lg" id="delay" name="delay">
+                                        <option value="1">极快 (1秒)</option>
+                                        <option value="2" selected>快速 (2秒)</option>
+                                        <option value="3">正常 (3秒)</option>
+                                        <option value="4">稳健 (4秒)</option>
+                                        <option value="5">缓慢 (5秒)</option>
+                                        <option value="8">很慢 (8秒)</option>
+                                        <option value="10">极慢 (10秒)</option>
+                                    </select>
+                                    <div class="form-text">避免请求过快</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cookie状态提醒 -->
+                        <div id="cookieAlert" class="alert alert-warning border-0" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>
+                                    <strong>Cookie状态检查</strong>
+                                    <div class="small">正在检查Cookie有效性...</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary ms-auto" onclick="checkCookieStatus()">
+                                    刷新状态
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 系统检查 -->
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-outline-info" onclick="testConnection()">
+                                        <i class="bi bi-wifi"></i> 测试连接
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="previewKeyword()">
+                                        <i class="bi bi-eye"></i> 预览关键词
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="scrapeBtn">
+                                        <i class="bi bi-play-circle"></i> 开始爬取
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 进度监控区域 -->
+            <div id="progressArea" class="card shadow-sm" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-activity"></i> 爬取进度监控
+                        </h6>
+                        <button class="btn btn-danger btn-lg pulse-animation" id="stopScrapeBtn" onclick="stopScraping()">
+                            <i class="bi bi-stop-circle-fill me-1"></i>
+                            <span class="fw-bold">停止爬取</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 主要进度条 -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">总体进度</span>
+                            <span id="progressPercentage">0%</span>
+                        </div>
+                        <div class="progress progress-lg">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                 id="mainProgressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 详细状态 -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2"
+                                             id="statusSpinner" role="status"></div>
+                                        <span id="statusText" class="fw-bold">正在初始化...</span>
+                                    </div>
+                                    <div id="detailText" class="small text-muted mt-1">准备开始爬取</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body py-2">
+                                                <div id="foundCount" class="h5 mb-0">0</div>
+                                                <div class="small">已发现</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="card bg-info text-white">
+                                            <div class="card-body py-2">
+                                                <div id="savedCount" class="h5 mb-0">0</div>
+                                                <div class="small">已保存</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日志输出 -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">实时日志</span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearLogs()">
+                                清空日志
+                            </button>
+                        </div>
+                        <div id="logOutput" class="bg-dark text-light p-3 rounded"
+                             style="height: 150px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 14px;">
+                            <div class="text-muted">等待爬取开始...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果显示区域 -->
+            <div id="resultArea" class="mt-4" style="display: none;">
+                <!-- 动态结果内容 -->
+            </div>
+        </div>
+
+        <!-- 右侧信息面板 -->
+        <div class="col-lg-4">
+            <!-- 系统状态卡片 -->
+            <div class="card shadow-sm mb-4 border-0" style="background-color: #2c3e50;">
+                <div class="card-header text-white border-0 bg-dark bg-opacity-50">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-activity me-2" style="font-size: 1.2rem;"></i>
+                        <strong>系统状态监控</strong>
+                        <span class="ms-auto badge bg-success text-white fw-bold" id="statusBadge">
+                            <i class="bi bi-broadcast me-1"></i>
+                            实时
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body bg-white">
+                    <!-- 统计数据网格 -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <div class="stat-item text-center p-4 rounded-3 bg-light border border-primary border-opacity-25">
+                                <div class="d-flex align-items-center justify-content-center mb-3">
+                                    <i class="bi bi-database-fill text-primary me-3" style="font-size: 1.8rem;"></i>
+                                    <div id="productStats" class="h4 mb-0 text-primary fw-bold">-</div>
+                                </div>
+                                <div class="text-dark fw-bold fs-6">商品统计</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-item text-center p-3 rounded-3 bg-light border border-info border-opacity-25">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="bi bi-currency-yen text-info me-2" style="font-size: 1.4rem;"></i>
+                                    <div id="avgPrice" class="h5 mb-0 text-info fw-bold">-</div>
+                                </div>
+                                <div class="text-dark fw-semibold">平均价格</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-item text-center p-3 rounded-3 bg-light border border-warning border-opacity-25">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="bi bi-tags-fill text-warning me-2" style="font-size: 1.4rem;"></i>
+                                    <div id="keywordCount" class="h5 mb-0 text-warning fw-bold">-</div>
+                                </div>
+                                <div class="text-dark fw-semibold">关键词数</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分隔线 -->
+                    <div class="border-top border-2 border-dark border-opacity-10 my-4"></div>
+
+                    <!-- 操作按钮 -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-sm fw-bold py-2" onclick="refreshStats()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            <span class="btn-text">刷新统计</span>
+                        </button>
+                        <a href="{{ url_for('stats') }}" class="btn btn-outline-primary btn-sm fw-bold py-2">
+                            <i class="bi bi-bar-chart me-2"></i>
+                            <span class="btn-text">详细统计</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作卡片 -->
+            <div class="card shadow-sm mb-4 border-0" style="background-color: #f8f9fa;">
+                <div class="card-header border-0">
+                    <h6 class="mb-0 text-dark d-flex align-items-center">
+                        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                        快速导航
+                    </h6>
+                </div>
+                <div class="card-body bg-white bg-opacity-90">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('index') }}" class="btn btn-light btn-sm" style="border: 1px solid #e0e0e0; transition: all 0.2s;">
+                            <i class="bi bi-grid-3x3-gap-fill text-primary me-1"></i>
+                            <span class="btn-text">商品列表</span>
+                        </a>
+                        <a href="{{ url_for('stats') }}" class="btn btn-light btn-sm" style="border: 1px solid #e0e0e0; transition: all 0.2s;">
+                            <i class="bi bi-graph-up text-success me-1"></i>
+                            <span class="btn-text">数据统计</span>
+                        </a>
+                        <a href="{{ url_for('system_settings') }}" class="btn btn-light btn-sm" style="border: 1px solid #e0e0e0; transition: all 0.2s;">
+                            <i class="bi bi-sliders text-secondary me-1"></i>
+                            <span class="btn-text">系统设置</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+</div>
+
+<!-- 关键词历史模态框 -->
+<div class="modal fade" id="keywordHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-history"></i> 关键词历史记录
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- 统计信息 -->
+                <div class="alert alert-info mb-3 text-center">
+                    <strong><i class="bi bi-clock-history"></i> 历史关键词数量：</strong>
+                    <span id="totalHistoryCount">0</span> 条
+                </div>
+
+                <!-- 关键词列表 -->
+                <div id="keywordHistoryList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- 动态加载历史关键词 -->
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="mt-3 pt-3 border-top text-center">
+                    <button class="btn btn-sm btn-warning" onclick="clearAllHistory()">
+                        <i class="bi bi-trash3"></i> 清空历史
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row w-100">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            提示：点击关键词可选择并填入表单，支持批量操作和搜索筛选
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmKeywordSelection()">
+                            <i class="bi bi-check-circle"></i> 确认选择
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+
+/* 关键词历史相关样式 */
+.keyword-item.selected .card {
+    border: 2px solid #0d6efd !important;
+    background-color: #f8f9fa;
+}
+
+.keyword-item {
+    transition: all 0.3s ease;
+}
+
+.keyword-item:hover .card {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.keyword-checkbox {
+    cursor: pointer;
+}
+
+.modal-lg {
+    max-width: 900px;
+}
+
+/* 自定义滚动条 */
+#keywordHistoryList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#keywordHistoryList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#keywordHistoryList::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#keywordHistoryList::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 搜索框样式 */
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+/* 排序下拉菜单样式 */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+/* 统计信息样式 */
+.alert-info {
+    background-color: #e3f2fd;
+    border: none;
+    border-radius: 10px;
+}
+
+/* 按钮动画 */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 模态框头部样式 */
+.modal-header {
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+}
+
+/* 模态框底部样式 */
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-radius: 0 0 10px 10px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 全局变量
+    let isScraping = false;
+    let logMessages = [];
+    let currentScrapeController = null;
+
+    // 停止爬虫任务
+    async function stopScraping() {
+        if (!isScraping) {
+            showToast('当前没有正在进行的爬取任务', 'warning');
+            return;
+        }
+
+        // 确认对话框
+        if (!confirm('确定要停止当前的爬取任务吗？已爬取的数据可能会丢失。')) {
+            return;
+        }
+
+        try {
+            // 禁用停止按钮
+            const stopBtn = document.getElementById('stopScrapeBtn');
+            stopBtn.disabled = true;
+            stopBtn.className = 'btn btn-secondary btn-lg';
+            stopBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> <span class="fw-bold">正在停止...</span>';
+
+            // 添加停止日志
+            addLog('正在停止爬取任务...', 'warning');
+
+            // 如果有正在进行的fetch请求，尝试取消
+            if (currentScrapeController) {
+                currentScrapeController.abort();
+                currentScrapeController = null;
+            }
+
+            // 发送停止请求到后端
+            const response = await fetch('/api/stop-scraping', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                addLog('爬取任务已停止', 'success');
+                showToast('爬取任务已停止', 'success');
+
+                // 模拟等待后端处理完成
+                setTimeout(() => {
+                    addLog('等待爬虫进程完全停止...', 'info');
+                }, 1000);
+            } else {
+                addLog('停止爬取时出现错误: ' + result.message, 'error');
+                showToast('停止爬取失败', 'error');
+            }
+        } catch (error) {
+            addLog('停止爬取时出现网络错误: ' + error.message, 'error');
+            showToast('停止爬取失败', 'error');
+        } finally {
+            // 重置状态
+            isScraping = false;
+            setScrapingState(false);
+            completeProgress('已停止');
+
+            // 恢复停止按钮
+            const stopBtn = document.getElementById('stopScrapeBtn');
+            stopBtn.disabled = false;
+            stopBtn.className = 'btn btn-danger btn-lg pulse-animation';
+            stopBtn.innerHTML = '<i class="bi bi-stop-circle-fill me-1"></i> <span class="fw-bold">停止爬取</span>';
+        }
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSystemStats();
+        checkCookieStatus();
+        loadKeywordHistory();
+
+        // 初始化工具提示
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    // 爬取表单提交
+    document.getElementById('scrapeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (isScraping) {
+            showToast('正在爬取中，请耐心等待...', 'warning');
+            return;
+        }
+
+        const formData = new FormData(this);
+        const keyword = formData.get('keyword').trim();
+        const maxPages = formData.get('max_pages');
+
+        if (!keyword) {
+            showToast('请输入搜索关键词', 'warning');
+            return;
+        }
+
+        // 显示进度区域
+        showProgressArea();
+
+        // 禁用按钮
+        setScrapingState(true);
+
+        // 添加日志
+        addLog(`开始爬取关键词: ${keyword}, 页数: ${maxPages}`, 'info');
+        addLog('正在初始化爬虫引擎...', 'info');
+
+        try {
+            // 模拟进度更新
+            simulateProgress();
+
+            const response = await fetch('/scrape', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            // 完成进度
+            completeProgress();
+
+            if (result.success) {
+                addLog(`爬取成功! ${result.message}`, 'success');
+                showResult('success', result.message);
+
+                // 保存关键词到历史
+                saveKeywordToHistory(keyword);
+
+                // 刷新统计
+                setTimeout(() => {
+                    loadSystemStats();
+                    loadRecentKeywords();
+                }, 1000);
+            } else {
+                addLog(`爬取失败: ${result.message}`, 'error');
+                showResult('error', result.message);
+            }
+
+        } catch (error) {
+            addLog(`请求失败: ${error.message}`, 'error');
+            showResult('error', '请求失败: ' + error.message);
+        }
+
+        setScrapingState(false);
+    });
+
+    // 显示进度区域
+    function showProgressArea() {
+        const progressArea = document.getElementById('progressArea');
+        progressArea.style.display = 'block';
+        resetProgress();
+
+        // 滚动到进度区域
+        progressArea.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 重置进度
+    function resetProgress() {
+        document.getElementById('mainProgressBar').style.width = '0%';
+        document.getElementById('progressPercentage').textContent = '0%';
+        document.getElementById('statusText').textContent = '正在初始化...';
+        document.getElementById('detailText').textContent = '准备开始爬取';
+        document.getElementById('foundCount').textContent = '0';
+        document.getElementById('savedCount').textContent = '0';
+        document.getElementById('logOutput').innerHTML = '<div class="text-muted">等待爬取开始...</div>';
+        logMessages = [];
+    }
+
+    // 模拟进度更新
+    function simulateProgress() {
+        let progress = 0;
+        let page = 1;
+        const maxPages = parseInt(document.getElementById('max_pages').value);
+
+        const progressInterval = setInterval(() => {
+            if (progress >= 100 || !isScraping) {
+                clearInterval(progressInterval);
+                return;
+            }
+
+            progress += Math.random() * 8;
+            if (progress > 95) progress = 95;
+
+            updateProgress(progress);
+
+            // 根据进度更新状态
+            if (progress < 20) {
+                updateStatus('正在启动浏览器...', '加载浏览器组件和配置');
+            } else if (progress < 40) {
+                updateStatus('正在应用Cookie认证...', '设置用户认证信息');
+            } else if (progress < 60) {
+                const currentPage = Math.floor((progress - 40) / 20 * maxPages) + 1;
+                updateStatus(`正在搜索商品...`, `第 ${currentPage} 页数据获取中`);
+                document.getElementById('foundCount').textContent = Math.floor(Math.random() * 20 + 5);
+            } else if (progress < 80) {
+                updateStatus('正在解析商品信息...', '提取商品详情和价格');
+                const found = parseInt(document.getElementById('foundCount').textContent);
+                document.getElementById('savedCount').textContent = Math.floor(found * 0.8);
+            } else if (progress < 95) {
+                updateStatus('正在保存数据...', '将商品信息保存到数据库');
+            }
+        }, 800);
+
+        // 保存interval ID以便后续清理
+        window.progressInterval = progressInterval;
+    }
+
+    // 更新进度
+    function updateProgress(progress) {
+        document.getElementById('mainProgressBar').style.width = progress + '%';
+        document.getElementById('progressPercentage').textContent = Math.round(progress) + '%';
+    }
+
+    // 更新状态
+    function updateStatus(mainStatus, detailStatus) {
+        document.getElementById('statusText').textContent = mainStatus;
+        document.getElementById('detailText').textContent = detailStatus;
+    }
+
+    // 完成进度
+    function completeProgress() {
+        if (window.progressInterval) {
+            clearInterval(window.progressInterval);
+        }
+
+        updateProgress(100);
+        updateStatus('爬取完成!', '所有数据已保存到数据库');
+        addLog('爬取完成! 正在清理资源...', 'success');
+
+        setTimeout(() => {
+            document.getElementById('progressArea').style.display = 'none';
+        }, 2000);
+    }
+
+    // 设置爬取状态
+    function setScrapingState(scraping) {
+        isScraping = scraping;
+        const scrapeBtn = document.getElementById('scrapeBtn');
+        const statusSpinner = document.getElementById('statusSpinner');
+
+        if (scraping) {
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 爬取中...';
+            statusSpinner.style.display = 'inline-block';
+        } else {
+            scrapeBtn.disabled = false;
+            scrapeBtn.innerHTML = '<i class="bi bi-play-circle"></i> 开始爬取';
+            statusSpinner.style.display = 'none';
+        }
+    }
+
+    // 添加日志
+    function addLog(message, type = 'info') {
+        const logOutput = document.getElementById('logOutput');
+        const timestamp = new Date().toLocaleTimeString();
+        const typeIcons = {
+            'info': 'ℹ️',
+            'success': '✅',
+            'error': '❌',
+            'warning': '⚠️'
+        };
+
+        const logMessage = `[${timestamp}] ${typeIcons[type]} ${message}`;
+        logMessages.push(logMessage);
+
+        // 保持最多20条日志
+        if (logMessages.length > 20) {
+            logMessages.shift();
+        }
+
+        logOutput.innerHTML = logMessages.map(msg =>
+            `<div class="log-line">${msg}</div>`
+        ).join('');
+
+        // 滚动到底部
+        logOutput.scrollTop = logOutput.scrollHeight;
+    }
+
+    // 清空日志
+    function clearLogs() {
+        logMessages = [];
+        document.getElementById('logOutput').innerHTML = '<div class="text-muted">日志已清空</div>';
+    }
+
+    // 显示结果
+    function showResult(type, message) {
+        const resultArea = document.getElementById('resultArea');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+        const title = type === 'success' ? '🎉 爬取成功！' : '⚠️ 爬取失败！';
+
+        resultArea.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-start">
+                    <i class="bi ${icon} fs-4 me-3"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading">${title}</h6>
+                        <p class="mb-2">${message}</p>
+                        ${type === 'success' ? `
+                            <div class="d-flex gap-2">
+                                <a href="/" class="btn btn-success btn-sm">
+                                    <i class="bi bi-list"></i> 查看商品
+                                </a>
+                                <a href="/stats" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-bar-chart"></i> 查看统计
+                                </a>
+                                <button class="btn btn-outline-primary btn-sm" onclick="resetForm()">
+                                    <i class="bi bi-arrow-clockwise"></i> 继续爬取
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        `;
+        resultArea.style.display = 'block';
+
+        // 滚动到结果区域
+        resultArea.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 重置表单
+    function resetForm() {
+        document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('keyword').value = '手机';
+        document.getElementById('max_pages').value = '3';
+        document.getElementById('delay').value = '2';
+    }
+
+  
+    // 检查Cookie状态
+    async function checkCookieStatus() {
+        const cookieAlert = document.getElementById('cookieAlert');
+        try {
+            const response = await fetch('/api/check-cookie', {
+                method: 'POST'
+            });
+            const result = await response.json();
+
+            if (result.valid) {
+                cookieAlert.className = 'alert alert-success border-0';
+                cookieAlert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <div>
+                            <strong>Cookie状态良好</strong>
+                            <div class="small">用户: ${result.info.username || '未知'} | 有效期至: ${result.info.expiry}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success ms-auto" onclick="checkCookieStatus()">
+                            刷新状态
+                        </button>
+                    </div>
+                `;
+            } else {
+                cookieAlert.className = 'alert alert-danger border-0';
+                cookieAlert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        <div>
+                            <strong>Cookie状态异常</strong>
+                            <div class="small">${result.message}</div>
+                        </div>
+                        <a href="/system_settings" class="btn btn-sm btn-danger ms-auto">
+                            更新Cookie
+                        </a>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            cookieAlert.className = 'alert alert-warning border-0';
+            cookieAlert.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                        <strong>无法检查Cookie状态</strong>
+                        <div class="small">${error.message}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-warning ms-auto" onclick="checkCookieStatus()">
+                        重试
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // 测试连接
+    async function testConnection() {
+        showToast('正在测试连接...', 'info');
+        try {
+            const response = await fetch('/api/stats');
+            if (response.ok) {
+                showToast('连接测试成功！', 'success');
+            } else {
+                showToast('连接测试失败', 'error');
+            }
+        } catch (error) {
+            showToast('连接测试失败: ' + error.message, 'error');
+        }
+    }
+
+    // 预览关键词
+    function previewKeyword() {
+        const keyword = document.getElementById('keyword').value.trim();
+        if (!keyword) {
+            showToast('请先输入关键词', 'warning');
+            return;
+        }
+
+        // 这里可以调用API预览搜索结果数量
+        showToast(`关键词 "${keyword}" 预览功能开发中...`, 'info');
+    }
+
+    // 加载系统统计
+    async function loadSystemStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+
+            // 合并显示：总数 + 今日新增
+            const totalText = data.total_products.toLocaleString();
+            const todayNew = data.today_new || 0;
+            const displayText = todayNew > 0 ? `${totalText} (今日+${todayNew})` : totalText;
+            document.getElementById('productStats').textContent = displayText;
+            document.getElementById('avgPrice').textContent = '¥' + Math.round(data.price_stats.avg_price);
+            document.getElementById('keywordCount').textContent = data.keyword_distribution.length;
+
+            
+        } catch (error) {
+            console.error('加载统计失败:', error);
+            document.getElementById('productStats').textContent = '获取失败';
+            document.getElementById('avgPrice').textContent = '获取失败';
+            document.getElementById('keywordCount').textContent = '获取失败';
+        }
+    }
+
+    // 刷新统计
+    function refreshStats() {
+        showToast('正在刷新统计数据...', 'info');
+        loadSystemStats();
+        setTimeout(() => {
+            showToast('统计数据已更新', 'success');
+        }, 1000);
+    }
+
+    
+    // 保存关键词到历史
+    function saveKeywordToHistory(keyword) {
+        let history = JSON.parse(localStorage.getItem('keywordHistory') || '[]');
+        history.unshift({
+            keyword: keyword,
+            timestamp: new Date().toISOString()
+        });
+
+        // 保留最近20个
+        history = history.slice(0, 20);
+
+        localStorage.setItem('keywordHistory', JSON.stringify(history));
+        loadKeywordHistory();
+    }
+
+    let currentKeywordHistory = [];
+
+// 加载关键词历史
+    function loadKeywordHistory() {
+        const history = JSON.parse(localStorage.getItem('keywordHistory') || '[]');
+        currentKeywordHistory = history;
+
+        // 更新统计信息
+        updateHistoryStatistics();
+
+        // 渲染关键词列表
+        renderKeywordList(history);
+    }
+
+    // 更新历史统计信息
+    function updateHistoryStatistics() {
+        const history = currentKeywordHistory;
+        document.getElementById('totalHistoryCount').textContent = history.length;
+    }
+
+    // 渲染关键词列表
+    function renderKeywordList(history) {
+        const historyList = document.getElementById('keywordHistoryList');
+
+        if (history.length === 0) {
+            historyList.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">暂无历史记录</p>
+                    <small class="text-muted">使用搜索功能后，关键词将自动保存到这里</small>
+                </div>
+            `;
+            return;
+        }
+
+        historyList.innerHTML = history.map((item, index) => {
+            const date = new Date(item.timestamp);
+            const timeStr = date.toLocaleString('zh-CN', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `
+                <div class="keyword-item" data-keyword="${item.keyword}" data-index="${index}">
+                    <div class="card border-0 bg-light mb-2">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <div class="fw-bold text-primary" style="cursor: pointer;"
+                                         onclick="selectKeyword('${item.keyword}')">
+                                        <i class="bi bi-search"></i> ${item.keyword}
+                                    </div>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-clock"></i> ${timeStr}
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="selectKeyword('${item.keyword}')">
+                                        <i class="bi bi-check-circle"></i> 选择
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeKeywordFromHistory(${index})">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 选择关键词
+    function selectKeyword(keyword) {
+        document.getElementById('keyword').value = keyword;
+        showToast(`已选择关键词: ${keyword}`, 'success');
+
+        // 保存关键词到历史（如果不存在）
+        saveKeywordToHistory(keyword);
+
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('keywordHistoryModal'));
+        modal.hide();
+    }
+
+    // 切换关键词选择状态
+    function toggleKeywordSelection(keyword, index) {
+        const key = keyword + '_' + index;
+        if (selectedKeywords.has(key)) {
+            selectedKeywords.delete(key);
+        } else {
+            selectedKeywords.add(key);
+        }
+        updateBatchDeleteButton();
+    }
+
+    // 更新批量删除按钮状态
+    function updateBatchDeleteButton() {
+        const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+        if (selectedKeywords.size > 0) {
+            batchDeleteBtn.style.display = 'inline-block';
+            batchDeleteBtn.innerHTML = `<i class="bi bi-trash"></i> 删除选中 (${selectedKeywords.size})`;
+        } else {
+            batchDeleteBtn.style.display = 'none';
+        }
+    }
+
+    // 全选/取消全选
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAllKeywords').checked;
+        const checkboxes = document.querySelectorAll('.keyword-checkbox');
+
+        selectedKeywords.clear();
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll;
+            if (selectAll) {
+                selectedKeywords.add(checkbox.value);
+            }
+        });
+
+        updateBatchDeleteButton();
+    }
+
+    // 删除选中的历史记录
+    function clearSelectedHistory() {
+        if (!confirm(`确定要删除选中的 ${selectedKeywords.size} 条记录吗？`)) {
+            return;
+        }
+
+        let history = [...currentKeywordHistory];
+        const toDelete = Array.from(selectedKeywords);
+
+        toDelete.forEach(key => {
+            const [keyword, index] = key.split('_');
+            const idx = parseInt(index);
+            if (history[idx] && history[idx].keyword === keyword) {
+                history.splice(idx, 1);
+            }
+        });
+
+        currentKeywordHistory = history;
+        localStorage.setItem('keywordHistory', JSON.stringify(history));
+        selectedKeywords.clear();
+
+        loadKeywordHistory();
+        showToast('选中的历史记录已删除', 'success');
+    }
+
+    // 删除单个关键词
+    function removeKeywordFromHistory(index) {
+        if (!confirm('确定要删除这条记录吗？')) {
+            return;
+        }
+
+        const history = [...currentKeywordHistory];
+        history.splice(index, 1);
+
+        currentKeywordHistory = history;
+        localStorage.setItem('keywordHistory', JSON.stringify(history));
+
+        loadKeywordHistory();
+        showToast('历史记录已删除', 'success');
+    }
+
+    // 清空所有历史
+    function clearAllHistory() {
+        if (!confirm('确定要清空所有历史记录吗？此操作不可恢复！')) {
+            return;
+        }
+
+        currentKeywordHistory = [];
+        selectedKeywords.clear();
+        localStorage.removeItem('keywordHistory');
+
+        loadKeywordHistory();
+        showToast('所有历史记录已清空', 'success');
+    }
+
+    
+    
+    
+    // 显示关键词历史
+    function showKeywordHistory() {
+        const modal = new bootstrap.Modal(document.getElementById('keywordHistoryModal'));
+        modal.show();
+    }
+
+    // Toast提示
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+            `;
+            document.body.appendChild(toastContainer);
+        }
+
+        const alertClass = {
+            'info': 'alert-info',
+            'success': 'alert-success',
+            'warning': 'alert-warning',
+            'error': 'alert-danger'
+        }[type] || 'alert-info';
+
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertClass} alert-dismissible fade show`;
+        toast.style.cssText = `
+            min-width: 300px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %} 
+ 

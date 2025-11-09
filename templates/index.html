@@ -1,0 +1,543 @@
+{% extends "base.html" %}
+
+{% block title %}商品列表 - 闲鱼数据管理系统{% endblock %}
+
+{% block content %}
+<style>
+.stats-card {
+    height: 100%;
+    min-height: 120px;
+}
+
+.stats-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+}
+
+.stats-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+</style>
+<!-- 搜索和筛选区域 -->
+<div class="card search-form mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-4">
+            <i class="bi bi-search"></i> 商品搜索与筛选
+        </h5>
+
+        <form method="GET" action="{{ url_for('index') }}" id="searchForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">
+                        <i class="bi bi-search text-primary"></i> 商品标题搜索
+                    </label>
+                    <input type="text" class="form-control" id="search" name="search"
+                           value="{{ search_query }}" placeholder="输入商品关键词...">
+                </div>
+                <div class="col-md-3">
+                    <label for="keyword" class="form-label">
+                        <i class="bi bi-tag text-success"></i> 搜索关键词
+                    </label>
+                    <select class="form-select" id="keyword" name="keyword">
+                        <option value="">所有关键词</option>
+                        {% for k in keywords %}
+                        <option value="{{ k }}" {% if keyword_filter == k %}selected{% endif %}>
+                            {{ k }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="sortBy" class="form-label">
+                        <i class="bi bi-sort-down text-warning"></i> 排序方式
+                    </label>
+                    <select class="form-select" id="sortBy" name="sort_by">
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>
+                            创建时间
+                        </option>
+                        <option value="search_time" {% if sort_by == 'search_time' %}selected{% endif %}>
+                            发布时间
+                        </option>
+                        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>
+                            价格
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="sortOrder" class="form-label">
+                        <i class="bi bi-sort-up text-info"></i> 排序顺序
+                    </label>
+                    <select class="form-select" id="sortOrder" name="sort_order">
+                        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>
+                            降序 ↓
+                        </option>
+                        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>
+                            升序 ↑
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+      </div>
+</div>
+
+<!-- 统计信息 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title">总商品数</h5>
+                <h2 class="mb-0" id="total-products">{{ products.total }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title">当前页商品</h5>
+                <h2 class="mb-0">{{ products.items|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title">总页数</h5>
+                <h2 class="mb-0">{{ products.pages }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title">当前排序</h5>
+                <h2 class="mb-0" id="current-sort" style="font-size: 1.5rem;">
+                    {% if sort_by == 'price' %}
+                        价格 ({{ '降序' if sort_order == 'desc' else '升序' }})
+                    {% elif sort_by == 'search_time' %}
+                        发布时间 ({{ '降序' if sort_order == 'desc' else '升序' }})
+                    {% else %}
+                        创建时间 ({{ '降序' if sort_order == 'desc' else '升序' }})
+                    {% endif %}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 商品列表 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <h5 class="mb-0 me-3">
+                <i class="bi bi-list"></i> 商品列表
+            </h5>
+            {% if search_query or keyword_filter %}
+            <span class="badge bg-info">
+                <i class="bi bi-funnel"></i> 筛选中
+            </span>
+            {% endif %}
+            {% if sort_by != 'created_at' or sort_order != 'desc' %}
+            <span class="badge bg-warning">
+                <i class="bi bi-sort"></i> 已排序
+            </span>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-3">
+                共 {{ products.total }} 个商品
+            </span>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshList()">
+                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+                <a href="{{ url_for('scrape') }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus-circle"></i> 添加商品
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if products.items %}
+        <div class="row" id="productList">
+            {% for product in products.items %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card product-card h-100">
+                    <div class="card-body">
+                        <!-- 商品图片 -->
+                        {% if product.product_image %}
+                        <div class="text-center mb-3">
+                            <a href="{{ product.product_link }}" target="_blank" class="text-decoration-none">
+                                <img src="{{ product.product_image }}"
+                                     alt="{{ product.title[:30] }}"
+                                     class="product-image img-fluid rounded"
+                                     style="max-height: 200px; object-fit: cover; width: 100%;"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvbWF0cGluZyIgdmlld0JveD0iMCAwIDEwMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGZpbGwgaWQ9Im5vLWltYWdlLWF2YWlsYWJsZSIgZmlsbD0iI2Y0YTJmIi8+PHN2ZyBlbmFibGVkPSJmYWxzZSIgeD0iNTAiIHk9IjUwIiB2aWV3Qm94PSIwIDAgMCAwIiB4PSI1MCIgeT0iNTAiIHJ4PSI1MCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZGRkIiBjeD0iNDAiIGN5PSI0MCIgcng9IjQiLzIiLzIvMiI+PHBhdGggZmlsbD0iIzk5OSIgZD0iTTEwIDEwIDEwIDB6TDEwIDUgMEgxMHYxMEgxMFoiPjwvcGF0aD48L3N2Zz48L2RlZnz48L3N2Zz4='"
+                                     style="width: 100%; height: 200px; object-fit: cover;">
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-primary"># {{ product.id }}</span>
+                            <div class="text-end">
+                                <div class="price-tag">{{ product.price or '价格未知' }}</div>
+                                {% if product.price %}
+                                <small class="text-muted">约¥{{ parse_price(product.price) }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h6 class="card-title mb-3" title="{{ product.title }}">
+                            <a href="#" class="text-decoration-none text-dark" onclick="showProductDetail({{ product.id }})">
+                                {{ product.title[:50] }}{% if product.title|length > 50 %}...{% endif %}
+                            </a>
+                        </h6>
+
+                        <div class="mb-3">
+                            {% if product.location %}
+                            <span class="badge location-badge me-2">
+                                <i class="bi bi-geo-alt"></i> {{ product.location }}
+                            </span>
+                            {% endif %}
+
+                            {% if product.seller_credit %}
+                            <span class="badge credit-badge me-2">
+                                <i class="bi bi-star"></i> {{ product.seller_credit }}
+                            </span>
+                            {% endif %}
+
+                            <span class="badge bg-secondary me-2">
+                                <i class="bi bi-search"></i> {{ product.keyword }}
+                            </span>
+                        </div>
+
+                        <div class="text-muted small">
+                            <div class="mb-1">
+                                <i class="bi bi-upc"></i> 商品ID: {{ product.product_id }}
+                            </div>
+                            <div class="mb-1">
+                                <i class="bi bi-clock"></i>
+                                搜索: {{ product.search_time.strftime('%m-%d %H:%M') if product.search_time else '未知' }}
+                            </div>
+                            <div>
+                                <i class="bi bi-calendar-plus"></i>
+                                创建: {{ product.created_at.strftime('%m-%d %H:%M') if product.created_at else '未知' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid">
+                            {% if product.product_link %}
+                            <a href="{{ product.product_link }}" target="_blank"
+                               class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-box-arrow-up-right"></i> 查看原链接
+                            </a>
+                            {% else %}
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="bi bi-x-circle"></i> 暂无链接
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 分页 -->
+        {% if products.pages > 1 %}
+        <nav aria-label="商品列表分页">
+            <ul class="pagination justify-content-center">
+                {% if products.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('index', page=products.prev_num, search=search_query, keyword=keyword_filter, sort_by=sort_by, sort_order=sort_order) }}">
+                        <i class="bi bi-chevron-left"></i> 上一页
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in products.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != products.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('index', page=page_num, search=search_query, keyword=keyword_filter, sort_by=sort_by, sort_order=sort_order) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if products.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('index', page=products.next_num, search=search_query, keyword=keyword_filter, sort_by=sort_by, sort_order=sort_order) }}">
+                        下一页 <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- 页面跳转 -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                显示第 {{ (products.page - 1) * products.per_page + 1 }} -
+                {{ products.page * products.per_page if products.page * products.per_page < products.total else products.total }}
+                条，共 {{ products.total }} 条记录
+            </div>
+            <form class="d-flex" method="GET" action="{{ url_for('index') }}">
+                <input type="hidden" name="search" value="{{ search_query }}">
+                <input type="hidden" name="keyword" value="{{ keyword_filter }}">
+                <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                <input type="hidden" name="sort_order" value="{{ sort_order }}">
+                <div class="input-group" style="width: 200px;">
+                    <input type="number" class="form-control form-control-sm" name="page"
+                           placeholder="页码" min="1" max="{{ products.pages }}">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">跳转</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="text-muted mt-3">暂无商品数据</h5>
+            <p class="text-muted">
+                {% if search_query or keyword_filter %}
+                没有找到符合条件的商品，请尝试其他搜索条件或
+                <a href="javascript:void(0)" onclick="clearFilters()">清空筛选条件</a>。
+                {% else %}
+                还没有爬取任何商品数据，<a href="{{ url_for('scrape') }}">点击这里开始爬取</a>。
+                {% endif %}
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{{ url_for('scrape') }}" class="btn btn-primary">
+                    <i class="bi bi-download"></i> 开始爬取数据
+                </a>
+                {% if search_query or keyword_filter %}
+                <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                    <i class="bi bi-x-circle"></i> 清空筛选
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 商品详情模态框 -->
+<div class="modal fade" id="productDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">商品详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="productDetailContent">
+                    <!-- 动态加载商品详情 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <a id="productLink" href="#" target="_blank" class="btn btn-success" style="display: none;">
+                    <i class="bi bi-box-arrow-up-right"></i> 查看原链接
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 当前筛选和排序状态
+    let currentFilter = {
+        search: '{{ search_query }}',
+        keyword: '{{ keyword_filter }}',
+        sortBy: '{{ sort_by }}',
+        sortOrder: '{{ sort_order }}'
+    };
+
+  
+    // 清空筛选条件
+    function clearFilters() {
+        window.location.href = '{{ url_for("index") }}';
+    }
+
+    // 刷新列表
+    function refreshList() {
+        const form = document.getElementById('searchForm');
+        form.submit();
+    }
+
+    // 显示商品详情
+    function showProductDetail(productId) {
+        fetch(`/product/${productId}`)
+            .then(response => response.text())
+            .then(html => {
+                // 这里简化处理，实际应该使用API
+                const modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+                document.getElementById('productDetailContent').innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                `;
+                modal.show();
+
+                // 模拟加载
+                setTimeout(() => {
+                    document.getElementById('productDetailContent').innerHTML = `
+                        <p>商品详情功能开发中...</p>
+                        <p>商品ID: ${productId}</p>
+                    `;
+                }, 500);
+            })
+            .catch(error => {
+                console.error('加载商品详情失败:', error);
+                showToast('加载商品详情失败', 'error');
+            });
+    }
+
+    // 监听排序变化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 自动应用筛选
+        const searchInput = document.getElementById('search');
+        const keywordSelect = document.getElementById('keyword');
+        const sortSelect = document.getElementById('sortBy');
+        const orderSelect = document.getElementById('sortOrder');
+
+        // 防抖动搜索
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length === 0 || this.value.length >= 2) {
+                    document.getElementById('searchForm').submit();
+                }
+            }, 500);
+        });
+
+        // 筛选变化时自动提交
+        keywordSelect.addEventListener('change', function() {
+            document.getElementById('searchForm').submit();
+        });
+
+        sortSelect.addEventListener('change', function() {
+            document.getElementById('searchForm').submit();
+        });
+
+        orderSelect.addEventListener('change', function() {
+            document.getElementById('searchForm').submit();
+        });
+
+        // 更新当前排序显示
+        updateSortDisplay();
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+K 聚焦搜索框
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+            // Esc 清空搜索
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                searchInput.value = '';
+                clearFilters();
+            }
+        });
+    });
+
+    // 更新排序显示
+    function updateSortDisplay() {
+        const sortDisplay = document.getElementById('current-sort');
+        const sortText = {
+            'created_at': '创建时间',
+            'search_time': '发布时间',
+            'price': '价格'
+        };
+
+        if (sortDisplay) {
+            const currentSortBy = document.getElementById('sortBy').value;
+            const currentSortOrder = document.getElementById('sortOrder').value;
+            sortDisplay.textContent = `${sortText[currentSortBy]} (${currentSortOrder === 'desc' ? '降序' : '升序'})`;
+        }
+    }
+
+    // Toast提示函数
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+            `;
+            document.body.appendChild(toastContainer);
+        }
+
+        const alertClass = {
+            'info': 'alert-info',
+            'success': 'alert-success',
+            'warning': 'alert-warning',
+            'error': 'alert-danger'
+        }[type] || 'alert-info';
+
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertClass} alert-dismissible fade show`;
+        toast.style.cssText = `
+            min-width: 300px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 定期刷新统计数据
+    setInterval(loadTotalCount, 30000);
+</script>
+{% endblock %}
