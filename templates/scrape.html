@@ -94,146 +94,385 @@
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+
+    /* 显示模式状态样式 */
+    #displayModeContainer {
+        transition: all 0.3s ease;
+    }
+
+    #displayModeText {
+        transition: all 0.3s ease;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+
+    #displayModeDesc {
+        transition: all 0.3s ease;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    /* 悬停效果 */
+    #displayModeContainer:hover #displayModeText {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 动画效果 */
+    @keyframes modeSwitch {
+        0% { opacity: 0.5; transform: scale(0.95); }
+        50% { opacity: 0.8; transform: scale(1.02); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    .mode-switching {
+        animation: modeSwitch 0.4s ease-out;
+    }
+
+    /* 表单控件增强样式 */
+    .form-control, .form-select {
+        border-radius: var(--border-radius-md);
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        transform: translateY(-1px);
+    }
+
+    /* 输入组样式增强 */
+    .input-group {
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+    }
+
+    .input-group .input-group-text {
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        font-weight: 500;
+        color: var(--secondary-color);
+    }
+
+    /* 卡片内容区域优化 */
+    .card-body {
+        padding: 1.75rem;
+    }
+
+    /* 标签样式优化 */
+    .badge {
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.8em;
+    }
+
+    /* 警告框样式优化 */
+    .alert {
+        border-radius: var(--border-radius-md);
+        border: none;
+        padding: 1rem 1.25rem;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        color: #1565c0;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        color: #f57f17;
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        color: #2e7d32;
+    }
+
+    /* 响应式优化 */
+    @media (max-width: 768px) {
+        .main-content {
+            padding: 1rem 0.5rem;
+        }
+
+        .scrape-card {
+            margin: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .btn-responsive {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+    }
+
+    /* 表单标签样式 */
+    .form-label {
+        font-weight: 600;
+        color: var(--secondary-color);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    /* 修复白色文字显示问题 */
+    .text-white {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 确保卡片头部有足够对比度 */
+    .card-header {
+        background-color: var(--bs-primary) !important;
+    }
+
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%) !important;
+    }
+
+    /* 确保系统状态卡片头部对比度 */
+    .card-header.bg-dark {
+        background: linear-gradient(135deg, #212529 0%, #495057 100%) !important;
+    }
+
+    /* 定时任务管理卡片头部样式 */
+    .card-header.bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    }
+
+    /* 确保所有白色文字都在有背景的容器中 */
+    .text-primary,
+    .text-info,
+    .text-success,
+    .text-warning,
+    .text-danger {
+        font-weight: 600;
+    }
 </style>
 
 <div class="container-fluid">
-    <!-- 爬取建议 - 独立第一排 -->
-    <div class="row mb-4">
+    <!-- 爬取建议 - 简化版 -->
+    <div class="row mb-3">
         <div class="col-12">
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <h6 class="alert-heading">
-                    <i class="bi bi-lightbulb"></i> <strong>爬取建议</strong>
-                </h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <strong>🕐 延迟策略：</strong>
-                        <ul class="mb-0 small">
-                            <li><strong>日常使用</strong>：正常(3秒)或稳健(4秒)</li>
-                            <li><strong>大量爬取</strong>：缓慢(5秒)或很慢(8秒)</li>
-                            <li><strong>避免拦截</strong>：建议≥3秒延迟</li>
-                        </ul>
+            <div class="alert alert-info alert-dismissible fade show border-0 bg-light" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-lightbulb text-info me-3 fs-5"></i>
+                    <div class="flex-grow-1">
+                        <strong class="text-dark">爬取建议：</strong>
+                        <span class="text-muted">正常使用建议3秒以上延迟，每次3-5页</span>
+                        <span class="text-muted ms-3">大量数据请间隔≥5秒，每次5-10页</span>
+                        <span class="badge bg-warning text-dark ms-2">安全优先</span>
                     </div>
-                    <div class="col-md-4">
-                        <strong>📄 页数选择：</strong>
-                        <ul class="mb-0 small">
-                            <li><strong>测试验证</strong>：1-2页</li>
-                            <li><strong>常规收集</strong>：3-5页</li>
-                            <li><strong>大量数据</strong>：5-10页</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <strong>🛡️ 安全提示：</strong>
-                        <ul class="mb-0 small">
-                            <li>爬取间隔≥3秒降低风险</li>
-                            <li>避免短时间内大量爬取</li>
-                            <li>定期检查Cookie有效性</li>
-                        </ul>
-                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         <!-- 主要爬取区域 -->
         <div class="col-lg-8">
             <!-- 爬取配置卡片 -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-gradient-primary text-white py-3">
-                    <h5 class="mb-0">
-                        <i class="bi bi-search"></i> <span style="color: #ff4757;">闲鱼数据爬取工具</span>
-                    </h5>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="bi bi-search me-2"></i>
+                                <span class="text-white">闲鱼数据爬取工具</span>
+                            </h5>
+                            <small class="opacity-75 ms-2">支持立即爬取与定时任务</small>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-light btn-sm" id="immediateModeBtn" onclick="setScrapeMode('immediate')">
+                                <i class="bi bi-play-circle"></i> 立即
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm" id="scheduledModeBtn" onclick="setScrapeMode('scheduled')">
+                                <i class="bi bi-clock"></i> 定时
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card-body p-4">
                     <form id="scrapeForm">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="keyword" class="form-label fw-bold">
-                                        <i class="bi bi-tag text-primary"></i> 搜索关键词
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control form-control-lg" id="keyword" name="keyword"
-                                               value="手机" required placeholder="输入关键词，如：手机、相机">
-                                        <button class="btn btn-outline-primary btn-lg" type="button"
-                                                data-bs-toggle="tooltip" title="从历史中选择" onclick="showKeywordHistory()">
-                                            <i class="bi bi-clock-history"></i> 历史
-                                        </button>
-                                    </div>
-                                    <div class="form-text">输入想要爬取的闲鱼商品关键词</div>
+                                <label for="keyword" class="form-label fw-semibold">
+                                    <i class="bi bi-tag text-primary me-1"></i> 搜索关键词
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <input type="text" class="form-control" id="keyword" name="keyword"
+                                           value="手机" required placeholder="输入关键词，如：手机、相机">
+                                    <button class="btn btn-outline-primary" type="button"
+                                            data-bs-toggle="tooltip" title="从历史中选择" onclick="showKeywordHistory()">
+                                        <i class="bi bi-clock-history"></i> 历史
+                                    </button>
                                 </div>
+                                <small class="text-muted">输入想要爬取的闲鱼商品关键词</small>
                             </div>
 
                             <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="max_pages" class="form-label fw-bold">
-                                        <i class="bi bi-file-text text-success"></i> 爬取页数
-                                    </label>
-                                    <select class="form-select form-select-lg" id="max_pages" name="max_pages">
-                                        <option value="1">1页 (约25个)</option>
-                                        <option value="2">2页 (约50个)</option>
-                                        <option value="3" selected>3页 (约75个)</option>
-                                        <option value="5">5页 (约125个)</option>
-                                        <option value="10">10页 (约250个)</option>
-                                    </select>
-                                </div>
+                                <label for="max_pages" class="form-label fw-semibold">
+                                    <i class="bi bi-file-text text-success me-1"></i> 爬取页数
+                                </label>
+                                <select class="form-select" id="max_pages" name="max_pages">
+                                    <option value="1">1页 (约25个)</option>
+                                    <option value="2">2页 (约50个)</option>
+                                    <option value="3" selected>3页 (约75个)</option>
+                                    <option value="5">5页 (约125个)</option>
+                                    <option value="10">10页 (约250个)</option>
+                                </select>
                             </div>
 
                             <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="delay" class="form-label fw-bold">
-                                        <i class="bi bi-clock text-warning"></i> 延迟时间
-                                    </label>
-                                    <select class="form-select form-select-lg" id="delay" name="delay">
-                                        <option value="1">极快 (1秒)</option>
-                                        <option value="2" selected>快速 (2秒)</option>
-                                        <option value="3">正常 (3秒)</option>
-                                        <option value="4">稳健 (4秒)</option>
-                                        <option value="5">缓慢 (5秒)</option>
-                                        <option value="8">很慢 (8秒)</option>
-                                        <option value="10">极慢 (10秒)</option>
-                                    </select>
-                                    <div class="form-text">避免请求过快</div>
-                                </div>
+                                <label for="delay" class="form-label fw-semibold">
+                                    <i class="bi bi-clock text-warning me-1"></i> 延迟时间
+                                </label>
+                                <select class="form-select" id="delay" name="delay">
+                                    <option value="1">极快 (1秒)</option>
+                                    <option value="2" selected>快速 (2秒)</option>
+                                    <option value="3">正常 (3秒)</option>
+                                    <option value="4">稳健 (4秒)</option>
+                                    <option value="5">缓慢 (5秒)</option>
+                                    <option value="8">很慢 (8秒)</option>
+                                    <option value="10">极慢 (10秒)</option>
+                                </select>
+                                <small class="text-muted">避免请求过快</small>
                             </div>
                         </div>
 
-                        <!-- Cookie状态提醒 -->
-                        <div id="cookieAlert" class="alert alert-warning border-0" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                <div>
-                                    <strong>Cookie状态检查</strong>
-                                    <div class="small">正在检查Cookie有效性...</div>
+                        <!-- 定时配置区域（默认隐藏） -->
+                        <div id="scheduledConfig" class="alert alert-warning alert-dismissible fade show border-0 bg-light" style="display: none;">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-clock-history me-2"></i>
+                                <strong class="text-dark">定时爬取配置</strong>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="scheduleType" class="form-label fw-semibold">
+                                        <i class="bi bi-arrow-repeat text-success me-1"></i> 调度类型
+                                    </label>
+                                    <select class="form-select" id="scheduleType" onchange="onIntegratedScheduleTypeChange()">
+                                        <option value="">请选择调度类型</option>
+                                        <option value="interval">间隔执行</option>
+                                        <option value="once">一次性任务</option>
+                                    </select>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary ms-auto" onclick="checkCookieStatus()">
-                                    刷新状态
+                                <div class="col-md-6">
+                                    <label for="taskName" class="form-label fw-semibold">
+                                        <i class="bi bi-tag text-info me-1"></i> 任务名称
+                                    </label>
+                                    <input type="text" class="form-control" id="integratedTaskName" placeholder="输入任务名称（可选）">
+                                </div>
+                            </div>
+
+                            <!-- 间隔执行配置 -->
+                            <div id="intervalScheduleConfig" class="row g-3" style="display: none;">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">间隔时间</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="intervalHours" min="0" max="23" placeholder="小时">
+                                        <span class="input-group-text">时</span>
+                                        <input type="number" class="form-control" id="intervalMinutes" min="0" max="59" placeholder="分">
+                                        <span class="input-group-text">钟</span>
+                                    </div>
+                                    <small class="text-muted">设置爬取间隔时间</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="scheduleEndDate" class="form-label fw-semibold">结束时间（可选）</label>
+                                    <input type="datetime-local" class="form-control" id="scheduleEndDate">
+                                    <small class="text-muted">留空表示永不结束</small>
+                                </div>
+                            </div>
+
+                            <!-- 一次性任务配置 -->
+                            <div id="onceScheduleConfig" class="row g-3" style="display: none;">
+                                <div class="col-md-6">
+                                    <label for="scheduleStartDate" class="form-label fw-semibold">
+                                        <i class="bi bi-calendar-event text-primary me-1"></i> 执行时间 <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="datetime-local" class="form-control" id="scheduleStartDate">
+                                    <small class="text-muted">设置具体的执行时间</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="taskDescription" class="form-label fw-semibold">任务描述（可选）</label>
+                                    <textarea class="form-control" id="integratedTaskDescription" rows="1" placeholder="描述此定时任务的目的"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableNotification">
+                                    <label class="form-check-label" for="enableNotification">
+                                        <i class="bi bi-bell text-warning me-1"></i> 启用任务执行通知
+                                    </label>
+                                </div>
+                                <small class="text-muted">执行结果将发送通知提醒</small>
+                            </div>
+                        </div>
+
+                        <!-- Cookie状态提醒 - 简化 -->
+                        <div id="cookieAlert" class="alert alert-warning alert-dismissible fade show border-0 bg-light mb-3" role="alert">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-shield-check me-2 text-warning"></i>
+                                    <div>
+                                        <strong class="text-dark">Cookie状态</strong>
+                                        <div class="small text-muted" id="cookieStatusText">正在检查...</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="checkCookieStatus()">
+                                    <i class="bi bi-arrow-clockwise"></i> 检查
                                 </button>
                             </div>
                         </div>
 
-                        <!-- 系统检查 -->
-                        <div class="row mt-3">
-                            <div class="col-md-4">
+                        <!-- 操作按钮区域 - 重新设计 -->
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4 col-6">
+                                <div class="d-grid position-relative">
+                                    <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="bi bi-display"></i> 显示模式
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="setDisplayMode(false)">
+                                            <i class="bi bi-eye text-success me-1"></i> 有头模式
+                                            <small class="text-muted">显示浏览器，可观察爬取</small>
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDisplayMode(true)">
+                                            <i class="bi bi-eye-slash text-secondary me-1"></i> 无头模式
+                                            <small class="text-muted">后台运行，无界面</small>
+                                        </a></li>
+                                    </ul>
+                                    <div class="d-block text-center mt-1" id="displayModeContainer">
+                                        <span class="badge bg-success bg-opacity-10 text-success mb-1" id="displayModeText">
+                                            <i class="bi bi-eye-slash me-1"></i>无头模式
+                                        </span>
+                                        <div class="small text-muted" id="displayModeDesc">后台运行，不显示浏览器</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
                                 <div class="d-grid">
-                                    <button type="button" class="btn btn-outline-info" onclick="testConnection()">
-                                        <i class="bi bi-wifi"></i> 测试连接
+                                    <button type="button" class="btn btn-warning btn-sm" id="saveTaskBtn" style="display: none;" onclick="saveScheduledTaskFromForm()">
+                                        <i class="bi bi-save"></i> 保存定时任务
                                     </button>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="d-grid">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="previewKeyword()">
-                                        <i class="bi bi-eye"></i> 预览关键词
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-5 col-12">
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary btn-lg" id="scrapeBtn">
-                                        <i class="bi bi-play-circle"></i> 开始爬取
+                                        <i class="bi bi-play-circle me-1"></i> <span id="scrapeBtnText">开始爬取</span>
                                     </button>
                                 </div>
                             </div>
@@ -326,6 +565,75 @@
             <div id="resultArea" class="mt-4" style="display: none;">
                 <!-- 动态结果内容 -->
             </div>
+
+            <!-- 定时任务管理卡片 -->
+            <div class="card shadow-sm mb-4 mt-4">
+                <div class="card-header bg-secondary text-white py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 text-white">
+                                <i class="bi bi-clock-history me-2"></i>定时任务管理
+                            </h5>
+                            <small class="text-white-50">自动执行爬取任务</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2" id="activeTaskCount">0 个活跃</span>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleTaskLogs()" title="执行日志">
+                                    <i class="bi bi-terminal"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="refreshMiniScheduledTasks()" title="刷新">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- 任务执行状态日志区域 -->
+                    <div id="taskLogsArea" class="border-bottom p-3" style="display: none; background: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-terminal me-1"></i> 执行日志
+                            </h6>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearTaskLogs()">
+                                <i class="bi bi-x-lg"></i> 清空
+                            </button>
+                        </div>
+                        <div id="taskLogsOutput" class="bg-light border p-2 rounded"
+                             style="height: 120px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.4;">
+                            <div class="text-muted">等待任务执行...</div>
+                        </div>
+                    </div>
+
+                    <!-- 任务管理操作栏 -->
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <h6 class="mb-0 fw-bold">所有任务</h6>
+                            </div>
+                            <div class="col-6 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="refreshScheduledTasks()">
+                                    <i class="bi bi-arrow-repeat"></i> 刷新
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#scheduledTaskModal">
+                                    <i class="bi bi-plus"></i> 新建
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 完整任务列表 -->
+                    <div id="scheduledTasksList" style="max-height: 500px; overflow-y: auto;">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <p class="mt-2 text-muted">正在加载定时任务...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 右侧信息面板 -->
@@ -391,6 +699,7 @@
                 </div>
             </div>
 
+    
             <!-- 快速操作卡片 -->
             <div class="card shadow-sm mb-4 border-0" style="background-color: #f8f9fa;">
                 <div class="card-header border-0">
@@ -416,7 +725,131 @@
                     </div>
                 </div>
             </div>
+
+  </div>
+
+<!-- 定时任务创建/编辑模态框 -->
+<div class="modal fade" id="scheduledTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock"></i> <span id="scheduledTaskModalTitle">创建定时任务</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduledTaskForm">
+                    <input type="hidden" id="scheduledTaskId">
+
+                    <!-- 基本信息 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="taskName" class="form-label fw-bold">任务名称 *</label>
+                            <input type="text" class="form-control" id="taskName" required placeholder="输入任务名称">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="taskKeyword" class="form-label fw-bold">搜索关键词 *</label>
+                            <input type="text" class="form-control" id="taskKeyword" required placeholder="输入关键词">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="taskMaxPages" class="form-label fw-bold">爬取页数</label>
+                            <select class="form-select" id="taskMaxPages">
+                                <option value="1">1页</option>
+                                <option value="2">2页</option>
+                                <option value="3" selected>3页</option>
+                                <option value="5">5页</option>
+                                <option value="10">10页</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskDelay" class="form-label fw-bold">延迟时间</label>
+                            <select class="form-select" id="taskDelay">
+                                <option value="1">极快(1秒)</option>
+                                <option value="2" selected>快速(2秒)</option>
+                                <option value="3">正常(3秒)</option>
+                                <option value="4">稳健(4秒)</option>
+                                <option value="5">缓慢(5秒)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskScheduleType" class="form-label fw-bold">调度类型 *</label>
+                            <select class="form-select" id="taskScheduleType" required onchange="onScheduleTypeChange()">
+                                <option value="">请选择</option>
+                                <option value="interval">间隔执行</option>
+                                <option value="once">一次性任务</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 调度配置 -->
+                    <div id="scheduleConfig" style="display: none;">
+                        <!-- 间隔执行配置 -->
+                        <div id="intervalConfig" style="display: none;">
+                            <h6 class="text-success mb-3">
+                                <i class="bi bi-arrow-repeat"></i> 间隔执行配置
+                            </h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="intervalHours" class="form-label">间隔小时数</label>
+                                    <input type="number" class="form-control" id="intervalHours" min="0" max="23" value="0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="intervalMinutes" class="form-label">间隔分钟数</label>
+                                    <input type="number" class="form-control" id="intervalMinutes" min="0" max="59" value="30" placeholder="默认30分钟">
+                                    <small class="form-text text-muted">设置间隔执行的时间（默认30分钟）</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 一次性任务配置 -->
+                        <div id="onceConfig" style="display: none;">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-calendar-event"></i> 一次性任务配置
+                            </h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="startDate" class="form-label">执行时间 *</label>
+                                    <input type="datetime-local" class="form-control" id="startDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="endDate" class="form-label">结束时间（可选）</label>
+                                    <input type="datetime-local" class="form-control" id="endDate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 其他选项 -->
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label fw-bold">任务描述</label>
+                        <textarea class="form-control" id="taskDescription" rows="3" placeholder="输入任务描述（可选）"></textarea>
+                    </div>
+
+                    <!-- 通知选项 -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notificationEnabled">
+                            <label class="form-check-label" for="notificationEnabled">
+                                启用通知（在任务开始/结束时发送通知）
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="saveScheduledTask()">
+                    <i class="bi bi-check-circle"></i> 保存任务
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <!-- 关键词历史模态框 -->
 <div class="modal fade" id="keywordHistoryModal" tabindex="-1">
@@ -642,11 +1075,15 @@
         }
     }
 
+    // 全局变量 - 爬取模式
+    let currentScrapeMode = 'immediate'; // 'immediate' 或 'scheduled'
+
     // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
         loadSystemStats();
         checkCookieStatus();
         loadKeywordHistory();
+        refreshScheduledTasks(); // 加载任务列表（包含活跃任务计数更新）
 
         // 初始化工具提示
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -655,73 +1092,7 @@
         });
     });
 
-    // 爬取表单提交
-    document.getElementById('scrapeForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        if (isScraping) {
-            showToast('正在爬取中，请耐心等待...', 'warning');
-            return;
-        }
-
-        const formData = new FormData(this);
-        const keyword = formData.get('keyword').trim();
-        const maxPages = formData.get('max_pages');
-
-        if (!keyword) {
-            showToast('请输入搜索关键词', 'warning');
-            return;
-        }
-
-        // 显示进度区域
-        showProgressArea();
-
-        // 禁用按钮
-        setScrapingState(true);
-
-        // 添加日志
-        addLog(`开始爬取关键词: ${keyword}, 页数: ${maxPages}`, 'info');
-        addLog('正在初始化爬虫引擎...', 'info');
-
-        try {
-            // 模拟进度更新
-            simulateProgress();
-
-            const response = await fetch('/scrape', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            // 完成进度
-            completeProgress();
-
-            if (result.success) {
-                addLog(`爬取成功! ${result.message}`, 'success');
-                showResult('success', result.message);
-
-                // 保存关键词到历史
-                saveKeywordToHistory(keyword);
-
-                // 刷新统计
-                setTimeout(() => {
-                    loadSystemStats();
-                    loadRecentKeywords();
-                }, 1000);
-            } else {
-                addLog(`爬取失败: ${result.message}`, 'error');
-                showResult('error', result.message);
-            }
-
-        } catch (error) {
-            addLog(`请求失败: ${error.message}`, 'error');
-            showResult('error', '请求失败: ' + error.message);
-        }
-
-        setScrapingState(false);
-    });
-
+    
     // 显示进度区域
     function showProgressArea() {
         const progressArea = document.getElementById('progressArea');
@@ -962,33 +1333,7 @@
         }
     }
 
-    // 测试连接
-    async function testConnection() {
-        showToast('正在测试连接...', 'info');
-        try {
-            const response = await fetch('/api/stats');
-            if (response.ok) {
-                showToast('连接测试成功！', 'success');
-            } else {
-                showToast('连接测试失败', 'error');
-            }
-        } catch (error) {
-            showToast('连接测试失败: ' + error.message, 'error');
-        }
-    }
-
-    // 预览关键词
-    function previewKeyword() {
-        const keyword = document.getElementById('keyword').value.trim();
-        if (!keyword) {
-            showToast('请先输入关键词', 'warning');
-            return;
-        }
-
-        // 这里可以调用API预览搜索结果数量
-        showToast(`关键词 "${keyword}" 预览功能开发中...`, 'info');
-    }
-
+  
     // 加载系统统计
     async function loadSystemStats() {
         try {
@@ -1263,6 +1608,1019 @@
         toastContainer.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+
+    // ==================== 定时任务相关功能 ====================
+
+    // 刷新定时任务列表
+    async function refreshScheduledTasks() {
+        try {
+            const response = await fetch('/api/scheduled-tasks');
+            const result = await response.json();
+
+            if (result.success) {
+                renderScheduledTasks(result.tasks);
+            } else {
+                document.getElementById('scheduledTasksList').innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                        <p class="mt-2 text-muted">加载定时任务失败: ${result.message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('加载定时任务失败:', error);
+            document.getElementById('scheduledTasksList').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-x-circle fs-1 text-danger"></i>
+                    <p class="mt-2 text-muted">网络错误，请稍后重试</p>
+                </div>
+            `;
+        }
+    }
+
+    // 渲染定时任务列表
+    function renderScheduledTasks(tasks) {
+        const container = document.getElementById('scheduledTasksList');
+
+        // 更新活跃任务计数
+        const activeTasks = tasks.filter(task => task.is_active);
+        const activeTaskCount = document.getElementById('activeTaskCount');
+        if (activeTaskCount) {
+            activeTaskCount.textContent = activeTasks.length + ' 个活跃';
+        }
+
+        if (tasks.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-clock text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="text-muted mb-2">还没有定时任务</h5>
+                    <p class="text-muted mb-3">创建定时任务自动执行数据爬取</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduledTaskModal">
+                        <i class="bi bi-plus me-1"></i>创建任务
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="p-3">';
+        tasks.forEach(task => {
+            const statusBadge = getStatusBadge(task);
+            const scheduleText = getScheduleText(task);
+            const lastRunText = task.last_run_time ? new Date(task.last_run_time).toLocaleString('zh-CN', {month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : '从未运行';
+            const nextRunText = task.next_run_time ? new Date(task.next_run_time).toLocaleString('zh-CN', {month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : '未设置';
+
+            html += `
+                <div class="card mb-3 border">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-0 fw-bold me-2">${task.task_name}</h6>
+                                ${statusBadge}
+                            </div>
+                            <small class="text-muted">
+                                ${task.keyword} • ${task.max_pages}页
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <small class="text-muted">调度周期</small>
+                                <div class="fw-bold">${scheduleText}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">成功率</small>
+                                <div class="fw-bold ${task.success_rate >= 90 ? 'text-success' : task.success_rate >= 70 ? 'text-warning' : 'text-danger'}">
+                                    ${task.success_rate}%
+                                </div>
+                                <small class="text-muted">${task.successful_runs}/${task.total_runs}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">最后运行</small>
+                                <div class="fw-bold">${lastRunText}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">下次运行</small>
+                                <div class="fw-bold">${nextRunText}</div>
+                            </div>
+                        </div>
+
+                        ${task.description ? `
+                            <div class="alert alert-light border p-2 mb-3">
+                                <small class="text-muted">${task.description}</small>
+                            </div>
+                        ` : ''}
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm ${task.is_active ? 'btn-warning' : 'btn-success'}"
+                                    onclick="toggleTask(${task.id})" ${task.is_running ? 'disabled' : ''}>
+                                <i class="bi bi-${task.is_active ? 'pause-fill' : 'play-fill'}"></i>
+                                ${task.is_active ? '暂停' : '启动'}
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="runTaskNow(${task.id})" ${task.is_running ? 'disabled' : ''}>
+                                <i class="bi bi-play-circle"></i> 立即运行
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${task.id})">
+                                <i class="bi bi-pencil"></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTask(${task.id})" ${task.is_running ? 'disabled' : ''}>
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // 获取状态徽章
+    function getStatusBadge(task) {
+        if (task.is_running) {
+            return '<span class="badge bg-primary">运行中</span>';
+        } else if (task.is_active) {
+            return '<span class="badge bg-success">已启用</span>';
+        } else {
+            return '<span class="badge bg-secondary">已暂停</span>';
+        }
+    }
+
+    // 获取调度文本
+    function getScheduleText(task) {
+        if (task.schedule_type === 'interval') {
+            const hours = task.interval_hours || 0;
+            const minutes = task.interval_minutes || 0;
+            if (hours > 0 && minutes > 0) {
+                return `每${hours}小时${minutes}分钟`;
+            } else if (hours > 0) {
+                return `每${hours}小时`;
+            } else if (minutes > 0) {
+                return `每${minutes}分钟`;
+            }
+        } else if (task.schedule_type === 'once') {
+            return '一次性';
+        }
+        return '未设置';
+    }
+
+    // 调度类型改变事件 - 用于独立模态框
+    function onScheduleTypeChange() {
+        const scheduleType = document.getElementById('taskScheduleType').value;
+        const scheduleConfig = document.getElementById('scheduleConfig');
+        const intervalConfig = document.getElementById('intervalConfig');
+        const onceConfig = document.getElementById('onceConfig');
+
+        scheduleConfig.style.display = scheduleType ? 'block' : 'none';
+        intervalConfig.style.display = scheduleType === 'interval' ? 'block' : 'none';
+        onceConfig.style.display = scheduleType === 'once' ? 'block' : 'none';
+    }
+
+    // 调度类型改变事件 - 用于集成表单
+    function onIntegratedScheduleTypeChange() {
+        const scheduleType = document.getElementById('scheduleType').value;
+        const intervalScheduleConfig = document.getElementById('intervalScheduleConfig');
+        const onceScheduleConfig = document.getElementById('onceScheduleConfig');
+
+        if (scheduleType === 'interval') {
+            intervalScheduleConfig.style.display = 'block';
+            onceScheduleConfig.style.display = 'none';
+        } else if (scheduleType === 'once') {
+            intervalScheduleConfig.style.display = 'none';
+            onceScheduleConfig.style.display = 'block';
+        } else {
+            intervalScheduleConfig.style.display = 'none';
+            onceScheduleConfig.style.display = 'none';
+        }
+    }
+
+    // 保存定时任务
+    async function saveScheduledTask() {
+        console.log('saveScheduledTask called');
+
+        const taskId = document.getElementById('scheduledTaskId').value;
+        console.log('Task ID:', taskId);
+
+        const taskName = document.getElementById('taskName');
+        const taskKeyword = document.getElementById('taskKeyword');
+        const taskScheduleType = document.getElementById('taskScheduleType');
+
+        console.log('Form elements:', {
+            taskName: taskName,
+            taskKeyword: taskKeyword,
+            taskScheduleType: taskScheduleType
+        });
+
+        if (!taskName || !taskKeyword || !taskScheduleType) {
+            console.error('Required form elements not found');
+            showToast('表单元素未找到，请刷新页面重试', 'error');
+            return;
+        }
+
+        const formData = {
+            task_name: taskName.value.trim(),
+            keyword: taskKeyword.value.trim(),
+            max_pages: parseInt(document.getElementById('taskMaxPages').value),
+            delay: parseInt(document.getElementById('taskDelay').value),
+            schedule_type: taskScheduleType.value,
+            interval_hours: parseInt(document.getElementById('intervalHours').value) || 0,
+            interval_minutes: parseInt(document.getElementById('intervalMinutes').value) || 0,
+            start_date: document.getElementById('startDate').value,
+            end_date: document.getElementById('endDate').value,
+            description: document.getElementById('taskDescription').value.trim(),
+            notification_enabled: document.getElementById('notificationEnabled').checked
+        };
+
+        console.log('Form data:', formData);
+
+        // 验证必填字段
+        if (!formData.task_name || !formData.keyword || !formData.schedule_type) {
+            showToast('请填写所有必填字段', 'warning');
+            return;
+        }
+
+        // 验证调度配置
+        if (formData.schedule_type === 'interval' && formData.interval_hours === 0 && formData.interval_minutes === 0) {
+            // 如果用户没有设置时间间隔，使用默认值30分钟
+            formData.interval_minutes = 30;
+
+            // 更新表单显示
+            document.getElementById('intervalMinutes').value = 30;
+
+            console.log('使用默认间隔时间：30分钟');
+        }
+
+        if (formData.schedule_type === 'once' && !formData.start_date) {
+            showToast('一次性任务需要设置执行时间', 'warning');
+            return;
+        }
+
+        try {
+            const url = taskId ? `/api/scheduled-tasks/${taskId}` : '/api/scheduled-tasks';
+            const method = taskId ? 'PUT' : 'POST';
+
+            console.log('Sending request to:', url, 'Method:', method);
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            console.log('Response status:', response.status);
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+
+                // 关闭模态框
+                const modalEl = document.getElementById('scheduledTaskModal');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.hide();
+
+                // 重置表单
+                document.getElementById('scheduledTaskForm').reset();
+                document.getElementById('scheduledTaskId').value = '';
+                onScheduleTypeChange();
+
+                // 刷新任务列表
+                refreshScheduledTasks();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('保存定时任务失败:', error);
+            showToast('网络错误: ' + error.message, 'error');
+        }
+    }
+
+    // 启动/暂停任务
+    async function toggleTask(taskId) {
+        try {
+            const response = await fetch(`/api/scheduled-tasks/${taskId}/toggle`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                refreshMiniScheduledTasks();  // 刷新迷你列表
+                refreshScheduledTasks();     // 同时刷新完整列表
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('操作失败:', error);
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    }
+
+    // 立即运行任务
+    async function runTaskNow(taskId) {
+        if (!confirm('确定要立即运行此任务吗？')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/scheduled-tasks/${taskId}/run-now`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                // 延迟刷新以显示运行状态
+                setTimeout(() => {
+                    refreshMiniScheduledTasks();  // 刷新迷你列表
+                    refreshScheduledTasks();     // 同时刷新完整列表
+                }, 1000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('运行任务失败:', error);
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    }
+
+    // 编辑任务
+    async function editTask(taskId) {
+        try {
+            // 获取任务详情（这里简化处理，直接从列表中获取）
+            const response = await fetch('/api/scheduled-tasks');
+            const result = await response.json();
+
+            if (result.success) {
+                const task = result.tasks.find(t => t.id === taskId);
+                if (task) {
+                    // 填充表单
+                    document.getElementById('scheduledTaskId').value = task.id;
+                    document.getElementById('scheduledTaskModalTitle').textContent = '编辑定时任务';
+                    document.getElementById('taskName').value = task.task_name;
+                    document.getElementById('taskKeyword').value = task.keyword;
+                    document.getElementById('taskMaxPages').value = task.max_pages;
+                    document.getElementById('taskDelay').value = task.delay;
+                    document.getElementById('taskScheduleType').value = task.schedule_type;
+                    document.getElementById('intervalHours').value = task.interval_hours || 0;
+                    document.getElementById('intervalMinutes').value = task.interval_minutes || 0;
+                    document.getElementById('startDate').value = task.start_date ? new Date(task.start_date).toISOString().slice(0, 16) : '';
+                    document.getElementById('endDate').value = task.end_date ? new Date(task.end_date).toISOString().slice(0, 16) : '';
+                    document.getElementById('taskDescription').value = task.description || '';
+                    document.getElementById('notificationEnabled').checked = task.notification_enabled;
+
+                    // 显示对应的调度配置
+                    onScheduleTypeChange();
+
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('scheduledTaskModal'));
+                    modal.show();
+                }
+            }
+        } catch (error) {
+            console.error('加载任务详情失败:', error);
+            showToast('加载任务详情失败', 'error');
+        }
+    }
+
+    // 删除任务
+    async function deleteTask(taskId) {
+        if (!confirm('确定要删除此定时任务吗？此操作不可恢复。')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/scheduled-tasks/${taskId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                refreshScheduledTasks();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('删除任务失败:', error);
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    }
+
+    // 模态框关闭时重置表单
+    document.getElementById('scheduledTaskModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('scheduledTaskForm').reset();
+        document.getElementById('scheduledTaskId').value = '';
+        document.getElementById('scheduledTaskModalTitle').textContent = '创建定时任务';
+        onScheduleTypeChange();
+    });
+
+    // ==================== 集成的定时任务功能 ====================
+
+    // 设置爬取模式
+    function setScrapeMode(mode) {
+        currentScrapeMode = mode;
+        const scheduledConfig = document.getElementById('scheduledConfig');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const scrapeBtnText = document.getElementById('scrapeBtnText');
+        const immediateModeBtn = document.getElementById('immediateModeBtn');
+        const scheduledModeBtn = document.getElementById('scheduledModeBtn');
+
+        if (mode === 'scheduled') {
+            scheduledConfig.style.display = 'block';
+            saveTaskBtn.style.display = 'block';
+            scrapeBtnText.textContent = '创建任务';
+
+            immediateModeBtn.classList.remove('btn-light');
+            immediateModeBtn.classList.add('btn-outline-light');
+            scheduledModeBtn.classList.remove('btn-warning');
+            scheduledModeBtn.classList.add('btn-light');
+        } else {
+            scheduledConfig.style.display = 'none';
+            saveTaskBtn.style.display = 'none';
+            scrapeBtnText.textContent = '开始爬取';
+
+            immediateModeBtn.classList.remove('btn-outline-light');
+            immediateModeBtn.classList.add('btn-light');
+            scheduledModeBtn.classList.remove('btn-light');
+            scheduledModeBtn.classList.add('btn-warning');
+        }
+    }
+
+    // 从表单保存定时任务
+    async function saveScheduledTaskFromForm() {
+        const keyword = document.getElementById('keyword').value.trim();
+        const maxPages = parseInt(document.getElementById('max_pages').value);
+        const delay = parseInt(document.getElementById('delay').value);
+        const scheduleType = document.getElementById('scheduleType').value;
+        const taskName = document.getElementById('integratedTaskName').value.trim() || `定时爬取_${keyword}`;
+
+        
+        // 验证必填字段
+        if (!keyword) {
+            showToast('请输入搜索关键词', 'warning');
+            return;
+        }
+
+        if (!scheduleType) {
+            showToast('请选择调度类型', 'warning');
+            return;
+        }
+
+        // 构建任务数据
+        const taskData = {
+            task_name: taskName,
+            keyword: keyword,
+            max_pages: maxPages,
+            delay: delay,
+            schedule_type: scheduleType,
+            interval_hours: 0,
+            interval_minutes: 0,
+            start_date: null,
+            end_date: document.getElementById('scheduleEndDate').value,
+            description: document.getElementById('integratedTaskDescription').value.trim(),
+            notification_enabled: document.getElementById('enableNotification').checked
+        };
+
+        // 根据调度类型设置参数
+        if (scheduleType === 'interval') {
+            const hours = parseInt(document.getElementById('intervalHours').value) || 0;
+            let minutes = parseInt(document.getElementById('intervalMinutes').value) || 0;
+
+            // 如果没有设置时间间隔，使用默认值30分钟
+            if (hours === 0 && minutes === 0) {
+                minutes = 30;
+                // 更新表单显示
+                const intervalMinutesEl = document.getElementById('intervalMinutes');
+                if (intervalMinutesEl) {
+                    intervalMinutesEl.value = 30;
+                }
+            }
+
+            taskData.interval_hours = hours;
+            taskData.interval_minutes = minutes;
+        } else if (scheduleType === 'once') {
+            const startDate = document.getElementById('scheduleStartDate').value;
+            if (!startDate) {
+                showToast('一次性任务需要设置执行时间', 'warning');
+                return;
+            }
+            taskData.start_date = startDate;
+        }
+
+        
+        try {
+            const response = await fetch('/api/scheduled-tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(taskData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('定时任务创建成功！', 'success');
+
+                // 清空定时配置
+                document.getElementById('scheduleType').value = '';
+                document.getElementById('taskName').value = '';
+                document.getElementById('intervalHours').value = '';
+                document.getElementById('intervalMinutes').value = '';
+                document.getElementById('scheduleStartDate').value = '';
+                document.getElementById('scheduleEndDate').value = '';
+                document.getElementById('taskDescription').value = '';
+                document.getElementById('enableNotification').checked = false;
+                onIntegratedScheduleTypeChange();
+
+                // 刷新定时任务列表
+                refreshMiniScheduledTasks();
+
+                // 切换回立即爬取模式
+                setScrapeMode('immediate');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('创建定时任务失败:', error);
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    }
+
+    // 刷新定时任务状态
+    async function refreshMiniScheduledTasks() {
+        try {
+            const response = await fetch('/api/scheduled-tasks');
+            const result = await response.json();
+
+            if (result.success) {
+                // 更新活跃任务计数
+                const activeTasks = result.tasks.filter(task => task.is_active);
+                const activeTaskCount = document.getElementById('activeTaskCount');
+                if (activeTaskCount) {
+                    activeTaskCount.textContent = activeTasks.length + ' 个活跃';
+                }
+
+                // 同时刷新完整任务列表
+                renderScheduledTasks(result.tasks);
+            }
+        } catch (error) {
+            console.error('刷新任务状态失败:', error);
+        }
+    }
+
+  
+  
+    // 重写爬取表单提交处理
+    document.getElementById('scrapeForm').addEventListener('submit', async function(e) {
+        if (currentScrapeMode === 'scheduled') {
+            e.preventDefault();
+            saveScheduledTaskFromForm();
+            return;
+        }
+
+        // 原有的立即爬取逻辑
+        e.preventDefault();
+
+        if (isScraping) {
+            showToast('正在爬取中，请耐心等待...', 'warning');
+            return;
+        }
+
+        const formData = new FormData(this);
+        const keyword = formData.get('keyword').trim();
+        const maxPages = formData.get('max_pages');
+
+        if (!keyword) {
+            showToast('请输入搜索关键词', 'warning');
+            return;
+        }
+
+        // 显示进度区域
+        showProgressArea();
+
+        // 禁用按钮
+        setScrapingState(true);
+
+        // 添加日志
+        addLog(`开始爬取关键词: ${keyword}, 页数: ${maxPages}`, 'info');
+        addLog('正在初始化爬虫引擎...', 'info');
+
+        try {
+            // 获取当前显示模式
+            const headless = getCurrentDisplayMode();
+
+            // 添加显示模式到现有表单数据
+            formData.append('headless', headless.toString());
+
+            // 模拟进度更新
+            simulateProgress();
+
+            const response = await fetch('/scrape', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            // 完成进度
+            completeProgress();
+
+            if (result.success) {
+                addLog(`爬取成功! ${result.message}`, 'success');
+                showResult('success', result.message);
+
+                // 保存关键词到历史
+                saveKeywordToHistory(keyword);
+
+                // 刷新统计
+                setTimeout(() => {
+                    loadSystemStats();
+                    loadRecentKeywords();
+                }, 1000);
+            } else {
+                addLog(`爬取失败: ${result.message}`, 'error');
+                showResult('error', result.message);
+            }
+
+        } catch (error) {
+            addLog(`请求失败: ${error.message}`, 'error');
+            showResult('error', '请求失败: ' + error.message);
+        }
+
+        setScrapingState(false);
+    });
+
+    // 任务日志相关函数
+    let taskLogsVisible = false;
+    let taskLogs = [];
+
+    // 切换任务日志显示
+    function toggleTaskLogs() {
+        const logsArea = document.getElementById('taskLogsArea');
+        taskLogsVisible = !taskLogsVisible;
+        logsArea.style.display = taskLogsVisible ? 'block' : 'none';
+
+        if (taskLogsVisible) {
+            // 滚动到最新日志
+            const logsOutput = document.getElementById('taskLogsOutput');
+            logsOutput.scrollTop = logsOutput.scrollHeight;
+        }
+    }
+
+    // 添加任务日志
+    function addTaskLog(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString('zh-CN');
+        const logEntry = {
+            timestamp: timestamp,
+            message: message,
+            type: type
+        };
+
+        taskLogs.push(logEntry);
+
+        // 保持最多50条日志
+        if (taskLogs.length > 50) {
+            taskLogs.shift();
+        }
+
+        // 更新显示
+        updateTaskLogsDisplay();
+    }
+
+    // 更新任务日志显示
+    function updateTaskLogsDisplay() {
+        const logsOutput = document.getElementById('taskLogsOutput');
+        if (!logsOutput) return;
+
+        if (taskLogs.length === 0) {
+            logsOutput.innerHTML = '<div class="text-muted small">等待任务执行...</div>';
+            return;
+        }
+
+        let html = '';
+        taskLogs.forEach(log => {
+            let icon = '';
+            let color = '';
+
+            switch (log.type) {
+                case 'success':
+                    icon = '✅';
+                    color = 'text-success';
+                    break;
+                case 'error':
+                    icon = '❌';
+                    color = 'text-danger';
+                    break;
+                case 'warning':
+                    icon = '⚠️';
+                    color = 'text-warning';
+                    break;
+                case 'info':
+                default:
+                    icon = 'ℹ️';
+                    color = 'text-info';
+                    break;
+            }
+
+            html += `<div class="small ${color}">[${log.timestamp}] ${icon} ${log.message}</div>`;
+        });
+
+        logsOutput.innerHTML = html;
+
+        // 自动滚动到底部
+        if (taskLogsVisible) {
+            logsOutput.scrollTop = logsOutput.scrollHeight;
+        }
+    }
+
+    // 清空任务日志
+    function clearTaskLogs() {
+        taskLogs = [];
+        updateTaskLogsDisplay();
+    }
+
+    // 增强版的定时任务状态检查
+    async function checkTaskStatus() {
+        try {
+            // 获取基本任务信息
+            const tasksResponse = await fetch('/api/scheduled-tasks');
+            const tasksResult = await tasksResponse.json();
+
+            if (tasksResult.success) {
+                // 更新活跃任务计数
+                const activeTasks = tasksResult.tasks.filter(task => task.is_active);
+                const activeTaskCount = document.getElementById('activeTaskCount');
+                if (activeTaskCount) {
+                    activeTaskCount.textContent = activeTasks.length;
+                    activeTaskCount.className = activeTasks.length > 0 ? 'badge bg-success ms-2' : 'badge bg-secondary ms-2';
+                }
+
+                // 同时刷新迷你任务列表和完整任务列表
+                renderMiniScheduledTasks(tasksResult.tasks);
+                renderScheduledTasks(tasksResult.tasks);
+
+                // 检查正在运行的任务
+                const runningTasks = tasksResult.tasks.filter(task => task.is_running);
+                if (runningTasks.length > 0) {
+                    runningTasks.forEach(task => {
+                        addTaskLog(`任务 "${task.task_name}" 正在运行...`, 'info');
+                    });
+                }
+            }
+
+            // 获取详细的任务状态信息
+            const statusResponse = await fetch('/api/task-status');
+            const statusResult = await statusResponse.json();
+
+            if (statusResult.success) {
+                const status = statusResult.status;
+
+                // 记录最近完成的任务
+                if (status.recent_completions.length > 0) {
+                    status.recent_completions.forEach(completion => {
+                        if (completion.successful) {
+                            addTaskLog(`任务 "${completion.task_name}" 执行成功 (成功率: ${completion.success_rate}%)`, 'success');
+                        } else {
+                            addTaskLog(`任务 "${completion.task_name}" 执行失败 (成功率: ${completion.success_rate}%)`, 'error');
+                        }
+                    });
+                }
+
+                // 记录即将运行的任务
+                if (status.upcoming_runs.length > 0) {
+                    status.upcoming_runs.forEach(upcoming => {
+                        if (upcoming.minutes_until_run <= 5) {
+                            addTaskLog(`任务 "${upcoming.task_name}" 即将在 ${upcoming.minutes_until_run} 分钟后执行`, 'warning');
+                        }
+                    });
+                }
+
+                // 更新页面标题中的运行状态
+                updatePageStatus(status);
+            }
+
+        } catch (error) {
+            console.error('检查任务状态失败:', error);
+        }
+    }
+
+    // 更新页面状态显示
+    function updatePageStatus(status) {
+        const statusBadge = document.getElementById('statusBadge');
+        if (statusBadge) {
+            if (status.running_tasks > 0) {
+                statusBadge.innerHTML = `<i class="bi bi-play-circle me-1"></i>运行中(${status.running_tasks})`;
+                statusBadge.className = 'ms-auto badge bg-warning text-white fw-bold';
+            } else if (status.active_tasks > 0) {
+                statusBadge.innerHTML = `<i class="bi bi-broadcast me-1"></i>活跃`;
+                statusBadge.className = 'ms-auto badge bg-success text-white fw-bold';
+            } else {
+                statusBadge.innerHTML = `<i class="bi bi-broadcast me-1"></i>空闲`;
+                statusBadge.className = 'ms-auto badge bg-secondary text-white fw-bold';
+            }
+        }
+    }
+
+    // 增强版的renderMiniScheduledTasks函数
+    function renderMiniScheduledTasks(tasks) {
+        const container = document.getElementById('miniScheduledTasksList');
+
+        if (tasks.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="bi bi-inbox text-muted"></i>
+                    <p class="small text-muted mt-1">暂无定时任务</p>
+                </div>
+            `;
+
+            // 更新计数
+            const activeTaskCount = document.getElementById('activeTaskCount');
+            if (activeTaskCount) activeTaskCount.textContent = '0';
+            return;
+        }
+
+        // 只显示前3个任务
+        const displayTasks = tasks.slice(0, 3);
+
+        // 更新活跃任务计数
+        const activeTasks = tasks.filter(task => task.is_active);
+        const activeTaskCount = document.getElementById('activeTaskCount');
+        if (activeTaskCount) {
+            activeTaskCount.textContent = activeTasks.length;
+        }
+
+        let html = '';
+        displayTasks.forEach(task => {
+            const statusBadge = getEnhancedStatusBadge(task);
+            const nextRunText = task.next_run_time ?
+                new Date(task.next_run_time).toLocaleString('zh-CN', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '未设置';
+
+            // 任务运行状态指示器
+            const runningIndicator = task.is_running ?
+                '<span class="spinner-grow spinner-grow-sm text-warning me-1" title="正在运行"></span>' :
+                (task.is_active ? '<i class="bi bi-circle-fill text-success me-1" title="已启用"></i>' :
+                               '<i class="bi bi-circle-fill text-secondary me-1" title="已暂停"></i>');
+
+            html += `
+                <div class="card mb-2 border-0 bg-light ${task.is_running ? 'border-warning' : ''}">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small">
+                                    ${runningIndicator}
+                                    ${task.task_name}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-search"></i> ${task.keyword}
+                                    <span class="ms-1">•</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    ${task.schedule_type === 'interval' ?
+                                        `每${task.interval_hours || 0}小时${task.interval_minutes || 0}分钟` :
+                                        '一次性任务'}
+                                    ${task.next_run_time ? '<span class="ms-1">•</span>' : ''}
+                                    ${task.next_run_time ? `下次: ${nextRunText}` : ''}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="text-muted">
+                                        成功: ${task.successful_runs} / 失败: ${task.failed_runs}
+                                    </small>
+                                    ${task.is_running ?
+                                        '<span class="badge bg-warning">运行中</span>' :
+                                        (task.is_active ? '<span class="badge bg-success">已启用</span>' :
+                                                       '<span class="badge bg-secondary">已暂停</span>')
+                                    }
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm ${task.is_active ? 'btn-warning' : 'btn-success'}"
+                                        onclick="toggleTask(${task.id})" ${task.is_running ? 'disabled' : ''}
+                                        title="${task.is_active ? '暂停任务' : '启用任务'}">
+                                    <i class="bi bi-${task.is_active ? 'pause-fill' : 'play-fill'}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        onclick="runTaskNow(${task.id})" ${task.is_running ? 'disabled' : ''}
+                                        title="立即执行">
+                                    <i class="bi bi-play-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (tasks.length > 3) {
+            html += `
+                <div class="text-center">
+                    <small class="text-muted">还有 ${tasks.length - 3} 个任务...</small>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    // 增强版状态标签
+    function getEnhancedStatusBadge(task) {
+        if (task.is_running) {
+            return '<span class="badge bg-warning">运行中</span>';
+        } else if (task.is_active) {
+            if (task.next_run_time) {
+                const nextRun = new Date(task.next_run_time);
+                const now = new Date();
+                const diffMinutes = Math.floor((nextRun - now) / (1000 * 60));
+
+                if (diffMinutes <= 0) {
+                    return '<span class="badge bg-info">即将执行</span>';
+                } else if (diffMinutes < 60) {
+                    return `<span class="badge bg-success">${diffMinutes}分钟后</span>`;
+                } else {
+                    return '<span class="badge bg-success">已启用</span>';
+                }
+            } else {
+                return '<span class="badge bg-success">已启用</span>';
+            }
+        } else {
+            return '<span class="badge bg-secondary">已暂停</span>';
+        }
+    }
+
+    // 定期检查任务状态
+    setInterval(checkTaskStatus, 30000); // 每30秒检查一次
+
+    // 启动时检查一次
+    setTimeout(checkTaskStatus, 2000);
+
+    // 显示模式相关函数
+    let currentDisplayMode = true; // 默认无头模式
+
+    // 设置显示模式
+    function setDisplayMode(headless) {
+        currentDisplayMode = headless;
+        const displayModeText = document.getElementById('displayModeText');
+        const displayModeDesc = document.getElementById('displayModeDesc');
+        const displayModeBtn = document.querySelector('[data-bs-toggle="dropdown"]');
+        const displayModeContainer = document.getElementById('displayModeContainer');
+
+        // 添加切换动画
+        displayModeContainer.classList.add('mode-switching');
+        setTimeout(() => {
+            displayModeContainer.classList.remove('mode-switching');
+        }, 400);
+
+        if (headless) {
+            // 无头模式
+            displayModeText.innerHTML = '<i class="bi bi-eye-slash me-1"></i>无头模式';
+            displayModeText.className = 'badge bg-success bg-opacity-10 text-success mb-1';
+            displayModeDesc.textContent = '后台运行，不显示浏览器';
+            displayModeBtn.innerHTML = '<i class="bi bi-eye-slash"></i> 显示模式';
+            displayModeBtn.className = 'btn btn-outline-success btn-sm dropdown-toggle';
+            showToast('已切换到无头模式（后台运行）', 'info');
+        } else {
+            // 有头模式
+            displayModeText.innerHTML = '<i class="bi bi-eye me-1"></i>有头模式';
+            displayModeText.className = 'badge bg-primary bg-opacity-10 text-primary mb-1';
+            displayModeDesc.textContent = '显示浏览器，可观察爬取过程';
+            displayModeBtn.innerHTML = '<i class="bi bi-eye"></i> 显示模式';
+            displayModeBtn.className = 'btn btn-outline-primary btn-sm dropdown-toggle';
+            showToast('已切换到有头模式（显示浏览器）', 'info');
+        }
+
+        // 保存显示模式到本地存储
+        localStorage.setItem('scraperDisplayMode', headless.toString());
+    }
+
+    // 获取当前显示模式
+    function getCurrentDisplayMode() {
+        return currentDisplayMode;
+    }
+
+    // 页面加载时恢复显示模式设置
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedMode = localStorage.getItem('scraperDisplayMode');
+        if (savedMode !== null) {
+            setDisplayMode(savedMode === 'true');
+        }
+    });
+
 </script>
 {% endblock %} 
  

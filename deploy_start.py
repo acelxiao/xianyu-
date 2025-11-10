@@ -101,8 +101,8 @@ def start_server():
         os.environ['FLASK_DEBUG'] = 'False'
 
         print("🌐 服务器启动中...")
-        print("📍 访问地址：http://127.0.0.1:5001")
-        print("📍 登录页面：http://127.0.0.1:5001/login")
+        print("📍 访问地址：http://127.0.0.1:5000")
+        print("📍 登录页面：http://127.0.0.1:5000/login")
         print("📋 默认账户：")
         print("   管理员：admin / funnyadmin123")
         print("   体验账户：trial / trial123")
@@ -113,7 +113,7 @@ def start_server():
         from web_app import app
         app.run(
             host='0.0.0.0',  # 允许外部访问
-            port=5001,
+            port=5000,
             debug=False
         )
 

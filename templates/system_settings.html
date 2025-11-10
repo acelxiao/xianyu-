@@ -116,6 +116,7 @@
 </div>
 
 <!-- 管理员专用 - 体验账户管理 -->
+<!-- 调试信息: session.role = {{ session.role if session.role else 'None' }} -->
 {% if session.role == 'admin' %}
 <div class="row mb-4">
     <div class="col-12">
@@ -2506,7 +2507,7 @@
         checkServerStatus();
         checkCookieStatus();
         loadDatabaseStats();
-        loadScrapingStats();
+        refreshScrapingStats();
 
         // 系统日志自动加载保障机制
         console.log('页面初始化：检查系统日志加载状态...');
@@ -2616,7 +2617,9 @@
 
         // 加载体验账户状态（仅管理员）
         {% if session.role == 'admin' %}
+        console.log('当前用户是管理员，准备加载体验账户状态...');
         setTimeout(() => {
+            console.log('开始调用 loadTrialUsersStatus()');
             loadTrialUsersStatus();
         }, 1000);
 
@@ -2720,19 +2723,28 @@
 
     // 加载体验账户状态
     async function loadTrialUsersStatus() {
+        console.log('开始加载体验账户状态...');
         try {
             const response = await fetch('/api/admin/trial-users-status');
+            console.log('API响应状态:', response.status);
 
             if (!response.ok) {
-                throw new Error('获取体验账户状态失败');
+                if (response.status === 401) {
+                    throw new Error('请先登录');
+                } else if (response.status === 403) {
+                    throw new Error('权限不足，需要管理员权限');
+                } else {
+                    throw new Error('获取体验账户状态失败');
+                }
             }
 
             const result = await response.json();
+            console.log('API响应结果:', result);
 
             if (result.success) {
                 renderTrialUsersList(result.users);
             } else {
-                throw new Error(result.message || '获取状态失败');
+                throw new Error(result.message || result.error || '获取状态失败');
             }
 
         } catch (error) {
@@ -2775,14 +2787,25 @@
                 ? '<span class="badge bg-warning text-dark">管理员</span>'
                 : '<span class="badge bg-secondary">普通</span>';
 
+            // 处理日期字符串，将其转换为Date对象
+            const expiresAt = user.trial_expires_at ? new Date(user.trial_expires_at) : null;
+
+            // 检查暂停状态
+            const isPaused = user.paused === 1;
+            const pauseBadge = isPaused
+                ? '<span class="badge bg-warning text-dark"><i class="bi bi-pause-fill"></i> 已暂停</span>'
+                : '';
+
             const statusBadge = user.trial_expired
                 ? '<span class="badge bg-danger">已过期</span>'
-                : user.trial_expires_at && user.trial_expires_at > new Date()
+                : expiresAt && expiresAt > new Date()
                 ? `<span class="badge bg-success">正常</span>`
                 : '<span class="badge bg-warning text-dark">即将过期</span>';
 
-            const remainingTime = user.trial_expires_at && user.trial_expires_at > new Date()
-                ? formatRemainingTime(user.trial_expires_at)
+            const remainingTime = isPaused
+                ? `${user.paused_remaining_minutes || 0}分钟 (已暂停)`
+                : expiresAt && expiresAt > new Date()
+                ? formatRemainingTime(expiresAt)
                 : '已过期';
 
             return `
@@ -2790,12 +2813,23 @@
                     <td>${user.username}</td>
                     <td>${roleBadge}</td>
                     <td>${remainingTime}</td>
-                    <td>${statusBadge}</td>
+                    <td>${statusBadge} ${pauseBadge}</td>
                     <td>
-                        ${user.role === 'trial' && user.trial_expired ? `
-                        <button class="btn btn-sm btn-success" onclick="quickExtendTrial('${user.username}')" title="快速延长2分钟">
-                            <i class="bi bi-arrow-clockwise"></i> 快速延期
-                        </button>
+                        ${user.role === 'trial' ? `
+                            ${isPaused ? `
+                            <button class="btn btn-sm btn-success" onclick="resumeTrial('${user.username}')" title="恢复体验账户">
+                                <i class="bi bi-play-fill"></i> 恢复
+                            </button>
+                            ` : `
+                            <button class="btn btn-sm btn-warning" onclick="pauseTrial('${user.username}')" title="暂停体验账户">
+                                <i class="bi bi-pause-fill"></i> 暂停
+                            </button>
+                            `}
+                            ${user.trial_expired ? `
+                            <button class="btn btn-sm btn-success" onclick="quickExtendTrial('${user.username}')" title="快速延长2分钟">
+                                <i class="bi bi-arrow-clockwise"></i> 快速延期
+                            </button>
+                            ` : ''}
                         ` : ''}
                     </td>
                 </tr>
@@ -2810,6 +2844,72 @@
         document.getElementById('trialUsername').value = username;
         document.getElementById('extendMinutes').value = '2';
         extendTrial();
+    }
+
+    // 暂停体验账户
+    async function pauseTrial(username) {
+        if (!confirm(`确定要暂停用户 ${username} 的体验账户吗？\n暂停后倒计时将停止，账户登录后自动恢复。`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/pause-trial', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('success', result.message || '体验账户已暂停');
+                // 刷新体验账户状态
+                setTimeout(() => {
+                    refreshScrapingStats();
+                }, 500);
+            } else {
+                showToast('error', result.message || '暂停失败');
+            }
+
+        } catch (error) {
+            console.error('暂停体验账户异常:', error);
+            showToast('error', '暂停失败，请重试');
+        }
+    }
+
+    // 恢复体验账户
+    async function resumeTrial(username) {
+        if (!confirm(`确定要恢复用户 ${username} 的体验账户吗？`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/resume-trial', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('success', result.message || '体验账户已恢复');
+                // 刷新体验账户状态
+                setTimeout(() => {
+                    refreshScrapingStats();
+                }, 500);
+            } else {
+                showToast('error', result.message || '恢复失败');
+            }
+
+        } catch (error) {
+            console.error('恢复体验账户异常:', error);
+            showToast('error', '恢复失败，请重试');
+        }
     }
 
     // 格式化剩余时间

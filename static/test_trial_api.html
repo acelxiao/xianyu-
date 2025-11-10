@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体验账户API测试</title>
+</head>
+<body>
+    <h1>体验账户API测试</h1>
+    <button onclick="testTrialAPI()">测试体验账户API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testTrialAPI() {
+            try {
+                const response = await fetch('/api/admin/trial-users-status');
+                const result = await response.json();
+
+                document.getElementById('result').innerHTML = `
+                    <h3>API响应:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>错误:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
