@@ -3523,7 +3523,6 @@ class NotificationService:
             <body>
                 <h2 style="color: #333;">{subject}</h2>
                 <div style="color: #666; line-height: 1.6;">
-                    {content.replace('\n', '<br>')}
                 </div>
                 <hr>
                 <p style="color: #999; font-size: 12px;">

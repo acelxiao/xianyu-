@@ -322,7 +322,7 @@ class AutoXianyuScraper:
                 elements = all_links
 
             # 限制处理数量
-            max_items = min(len(elements), 25)
+            max_items = min(len(elements), 30)
             print(f"Processing {max_items} out of {len(elements)} products")
 
             for i, element in enumerate(elements[:max_items]):
