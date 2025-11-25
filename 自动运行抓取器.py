@@ -160,6 +160,7 @@ class AutoXianyuScraper:
 
             # 解析并设置Cookie
             cookies = []
+            print(f"[Cookie设置] 当前cookie_string {self.cookie_string}")
             for item in self.cookie_string.split(';'):
                 if '=' in item:
                     key, value = item.strip().split('=', 1)

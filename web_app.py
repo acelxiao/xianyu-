@@ -996,6 +996,8 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
 
         # 获取当前配置的Cookie
         current_cookie = get_current_cookie()
+        print(f"当前Cookie内容: {current_cookie}")
+
         if not current_cookie:
             return False, "未配置Cookie，请先在系统设置中添加Cookie"
 
@@ -1175,7 +1177,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         time_str = f"{time_diff.days}天前"
 
                                     # 构建推送内容 - 修复编码问题
-                                    title = "新商品推送!"
+                                    title = f"新商品推送，监控关键词：{keyword}"
                                     product_title = product.title or '无标题'
                                     product_id = product.product_id
 
@@ -1189,7 +1191,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                     mobile_links = generate_mobile_xianyu_links(product_id)
 
                                     # 构建链接文本
-                                    link_text = f"[闲鱼APP]({mobile_links['goofish_h5']})"
+                                    link_text = f"[跳转闲鱼APP]({mobile_links['goofish_h5']})"
 
                                     # 构建完整内容 - 添加图片信息
                                     content_parts = [
@@ -1201,11 +1203,12 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
 
                                     # 添加图片信息（如果有图片）
                                     if product.product_image and product.product_image.strip():
-                                        content_parts.append(f"- 📷 商品图片：{product.product_image}")
+                                        jpg_url = ".jpg".join(product.product_image.split(".jpg", 1)[:1]) + ".jpg"
+                                        content_parts.append(f"- 📷 商品图片：![]({jpg_url})")
                                         content_parts.append("----------------------------------------")
 
                                     content_parts.extend([
-                                        f"-💰价格:{product.price or '面议'}  -⏰时间:{time_str}  -🗺地区:{product.location or '未知'}",
+                                        f"-💰价格:{product.price or '面议'}  -⏰时间:{product.seller_credit}  -地区:{product.location or '未知'}",
                                         "----------------------------------------",
                                         f"- 🔗 商品链接：{link_text}"
                                     ])
@@ -3335,6 +3338,8 @@ class NotificationService:
                     "text": f"## {title}\n\n{content}"
                 }
             }
+
+            print(f"[钉钉发送内容]: {data}")
 
             # 如果有密钥，添加签名
             if secret:
