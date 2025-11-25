@@ -447,6 +447,7 @@ class AutoXianyuScraper:
                 image_selectors = [
                     # 闲鱼/咸鱼商品图选择器 - 优先级最高
                     '.mainPic img',
+                    '.feeds-image--TDRC4fV1 img',
                     '.picR img',
                     '.pic img',
                     '.goods-pic img',
