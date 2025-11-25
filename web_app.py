@@ -1177,7 +1177,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         time_str = f"{time_diff.days}天前"
 
                                     # 构建推送内容 - 修复编码问题
-                                    title = f"新商品推送，监控关键词：{keyword}"
+                                    title = f"h新商品推送，监控关键词：{keyword}"
                                     product_title = product.title or '无标题'
                                     product_id = product.product_id
 
@@ -1185,7 +1185,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                     def generate_mobile_xianyu_links(product_id):
                                         """生成官方Goofish H5链接格式"""
                                         links = {}
-                                        links['goofish_h5'] = f"https://h5.m.goofish.com/item?forceFlush=1&id={product_id}&hitNativeDetail=true&from_kun_share=default"
+                                        links['goofish_h5'] = f"fleamarket://item?id={product_id}"
                                         return links
 
                                     mobile_links = generate_mobile_xianyu_links(product_id)
@@ -1209,8 +1209,8 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
 
                                     content_parts.extend([
                                         f"-💰价格:{product.price or '面议'}  -⏰时间:{product.seller_credit}  -地区:{product.location or '未知'}",
-                                        "----------------------------------------",
-                                        f"- 🔗 商品链接：{link_text}"
+                                        "----------------------------------------"
+                                        # f"- 🔗 商品链接：{link_text}"
                                     ])
                                     content = "\n".join(content_parts)
 
@@ -1218,7 +1218,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                     max_retries = 3
                                     for retry in range(max_retries):
                                         try:
-                                            if NotificationService.send_notification(config, title, content):
+                                            if NotificationService.send_notification(config, title, content, mobile_links['goofish_h5']):
                                                 sent_count += 1
                                                 print(f"[最新推送] 成功推送商品: {product_title[:30]}...")
                                                 # 企业微信需要更长延迟避免频率限制
@@ -3352,6 +3352,46 @@ class NotificationService:
                 webhook_url = f"{webhook_url}&timestamp={timestamp}&sign={sign}"
 
             # 发送请求
+            response = requests.post(webhook_url, json=data, timeout=100)
+            return response.status_code == 200 and response.json().get('errcode') == 0
+
+        except Exception as e:
+            print(f"钉钉通知发送失败: {str(e)}")
+            return False
+
+    @staticmethod
+    def send_dingtalk_notificationV2(webhook_url, secret, title, content, actionURL):
+        """发送钉钉通知"""
+        try:
+            # 构建消息内容
+            data = {
+                "msgtype": "actionCard",
+                "actionCard": {
+                    "title": title,
+                    "text": f"## {title}\n\n{content}",
+                    "btnOrientation": "0",
+                    "btns": [
+                        {
+                            "title": "打开闲鱼app",
+                            "actionURL": actionURL
+                        }
+                    ]
+                }
+            }
+
+            print(f"[钉钉发送内容]: {data}")
+
+            # 如果有密钥，添加签名
+            if secret:
+                timestamp = str(round(time.time() * 1000))
+                secret_enc = secret.encode('utf-8')
+                string_to_sign = f'{timestamp}\n{secret}'
+                string_to_sign_enc = string_to_sign.encode('utf-8')
+                hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+                sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+                webhook_url = f"{webhook_url}&timestamp={timestamp}&sign={sign}"
+
+            # 发送请求
             response = requests.post(webhook_url, json=data, timeout=10)
             return response.status_code == 200 and response.json().get('errcode') == 0
 
@@ -3845,7 +3885,7 @@ class NotificationService:
             return []
 
     @staticmethod
-    def send_notification(config, title, content):
+    def send_notification(config, title, content, actionURL):
         """发送通知的通用方法"""
         try:
             if not config.webhook_url:
@@ -3859,8 +3899,8 @@ class NotificationService:
                     config.webhook_url, title, content
                 )
             elif config.platform == 'dingtalk':
-                success = NotificationService.send_dingtalk_notification(
-                    config.webhook_url, config.secret or '', title, content
+                success = NotificationService.send_dingtalk_notificationV2(
+                    config.webhook_url, config.secret or '', title, content, actionURL
                 )
             elif config.platform == 'feishu':
                 success = NotificationService.send_feishu_notification(
