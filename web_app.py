@@ -1208,7 +1208,9 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         content_parts.append("----------------------------------------")
 
                                     content_parts.extend([
-                                        f"-💰价格:{product.price or '面议'}  -⏰时间:{product.seller_credit}  -地区:{product.location or '未知'}",
+                                        f"-💰价格:{product.price or '面议'} \\n",
+                                        f"-⏰时间:{product.seller_credit} \\n",
+                                        f"-🌏地区:{product.location or '未知'}",
                                         "----------------------------------------"
                                         # f"- 🔗 商品链接：{link_text}"
                                     ])

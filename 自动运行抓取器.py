@@ -446,8 +446,8 @@ class AutoXianyuScraper:
                 # 更精确的图片选择器，优先获取商品主图
                 image_selectors = [
                     # 闲鱼/咸鱼商品图选择器 - 优先级最高
-                    '.mainPic img',
                     '.feeds-image--TDRC4fV1 img',
+                    '.mainPic img',
                     '.picR img',
                     '.pic img',
                     '.goods-pic img',
@@ -495,8 +495,8 @@ class AutoXianyuScraper:
 
                 # 如果没有找到有效图片，设置为空字符串而不是占位符
                 if not product_image or '2-tps-2-2' in product_image:
+                    print(f"[图片警告] 商品 {title[:20]}... 未找到有效图片 product_image:{product_image}")
                     product_image = ''
-                    print(f"[图片警告] 商品 {title[:20]}... 未找到有效图片")
 
             except Exception as e:
                 print(f"图片提取失败: {e}")
