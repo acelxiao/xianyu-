@@ -1162,7 +1162,10 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                         sent_count = 0
                         # 获取最新的商品（根据保存数量获取）
                         latest_products = XianyuProduct.query.order_by(XianyuProduct.search_time.desc()).limit(saved_count).all()
-
+                        # 获取当前本地时间
+                        current_time = datetime.now()
+                        # 格式化输出为「时分」格式（24小时制）
+                        send_time_str = current_time.strftime("%H时%M分")
                         for config in latest_product_configs:
                             try:
                                 # 为每个商品单独发送推送
@@ -1176,8 +1179,9 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                     else:
                                         time_str = f"{time_diff.days}天前"
 
+
                                     # 构建推送内容 - 修复编码问题
-                                    title = f"发现新商品，监控关键词：{keyword}"
+                                    title = f"{send_time_str}发现新商品，关键词：{keyword}"
                                     product_title = product.title or '无标题'
                                     product_id = product.product_id
 
@@ -1196,7 +1200,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                     # 构建完整内容 - 添加图片信息
                                     content_parts = [
                                         "",
-                                        "- 商品详情 -",
+                                        "- ",
                                         f"{product_title}",
                                         "----------------------------------------"
                                     ]
