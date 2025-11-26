@@ -1199,9 +1199,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
 
                                     # 构建完整内容 - 添加图片信息
                                     content_parts = [
-                                        "",
-                                        "- ",
-                                        f"{product_title}",
+                                        f"- {product_title}",
                                         "----------------------------------------"
                                     ]
 
@@ -1217,9 +1215,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         f"-⏰时间:{product.seller_credit}  ",
                                         "",
                                         f"-🌏地区:{product.location or '未知'}  ",
-                                        "",
-                                        "----------------------------------------"
-                                        # f"- 🔗 商品链接：{link_text}"
+                                        ""
                                     ])
                                     content = "\n".join(content_parts)
 
