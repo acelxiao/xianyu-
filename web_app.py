@@ -1177,7 +1177,7 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         time_str = f"{time_diff.days}天前"
 
                                     # 构建推送内容 - 修复编码问题
-                                    title = f"h新商品推送，监控关键词：{keyword}"
+                                    title = f"发现新商品，监控关键词：{keyword}"
                                     product_title = product.title or '无标题'
                                     product_id = product.product_id
 
@@ -1208,9 +1208,12 @@ async def scrape_xianyu_data(keyword, max_pages=3, delay=2):
                                         content_parts.append("----------------------------------------")
 
                                     content_parts.extend([
-                                        f"-💰价格:{product.price or '面议'} \\n",
-                                        f"-⏰时间:{product.seller_credit} \\n",
-                                        f"-🌏地区:{product.location or '未知'}",
+                                        f"-💰价格:{product.price or '面议'}  ",
+                                        "",
+                                        f"-⏰时间:{product.seller_credit}  ",
+                                        "",
+                                        f"-🌏地区:{product.location or '未知'}  ",
+                                        "",
                                         "----------------------------------------"
                                         # f"- 🔗 商品链接：{link_text}"
                                     ])
